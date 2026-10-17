@@ -58,24 +58,28 @@ object InboxVerifier {
     private data class Payload(val kind: String, val from: PromiseEnvelope.Cid, val to: PromiseEnvelope.Cid, val body: String, val invokes: List<PromiseEnvelope.Cid>, val created: Long)
     private data class Proof(val publicKey: ByteArray, val signature: ByteArray)
 
-    private fun parsePayload(data: ByteArray): Payload? = try {
-        val map = Reader(data).oneMap() ?: return null
-        val kind = map.text("kind") ?: return null; val from = map.cid("from") ?: return null; val to = map.cid("to") ?: return null
-        val body = map.text("body") ?: return null; val invokes = map.cidArray("invokes") ?: return null; val created = map.uint("created_at") ?: return null
-        if (kind !in setOf("promise_offer", "promise_accept", "promise_decline", "observation") || body.encodeToByteArray().size !in 1..MAX_BODY || from == to || invokes.size > 4) return null
-        if ((kind == "promise_offer" && invokes.isNotEmpty()) || ((kind == "promise_accept" || kind == "promise_decline") && invokes.size != 1) || (kind == "observation" && invokes.isEmpty())) return null
-        if (invokes.distinct().size != invokes.size) return null
-        val rebuilt = CanonicalCbor.map(listOf("kind" to CanonicalCbor.text(kind), "from" to tag(from), "to" to tag(to), "body" to CanonicalCbor.text(body), "invokes" to CanonicalCbor.array(invokes.size, *invokes.map(::tag).toTypedArray()), "created_at" to CanonicalCbor.unsigned(created)))
-        if (!data.contentEquals(rebuilt)) null else Payload(kind, from, to, body, invokes, created)
-    } catch (_: Exception) { null }
+    private fun parsePayload(data: ByteArray): Payload? {
+        return try {
+            val map = Reader(data).oneMap() ?: return null
+            val kind = map.text("kind") ?: return null; val from = map.cid("from") ?: return null; val to = map.cid("to") ?: return null
+            val body = map.text("body") ?: return null; val invokes = map.cidArray("invokes") ?: return null; val created = map.uint("created_at") ?: return null
+            if (kind !in setOf("promise_offer", "promise_accept", "promise_decline", "observation") || body.encodeToByteArray().size !in 1..MAX_BODY || from == to || invokes.size > 4) return null
+            if ((kind == "promise_offer" && invokes.isNotEmpty()) || ((kind == "promise_accept" || kind == "promise_decline") && invokes.size != 1) || (kind == "observation" && invokes.isEmpty())) return null
+            if (invokes.distinct().size != invokes.size) return null
+            val rebuilt = CanonicalCbor.map(listOf("kind" to CanonicalCbor.text(kind), "from" to tag(from), "to" to tag(to), "body" to CanonicalCbor.text(body), "invokes" to CanonicalCbor.array(invokes.size, *invokes.map(::tag).toTypedArray()), "created_at" to CanonicalCbor.unsigned(created)))
+            if (!data.contentEquals(rebuilt)) null else Payload(kind, from, to, body, invokes, created)
+        } catch (_: Exception) { null }
+    }
 
-    private fun parseProof(data: ByteArray): Proof? = try {
-        val map = Reader(data).oneMap() ?: return null
-        val algorithm = map.text("algorithm") ?: return null; val key = map.bytes("public_key") ?: return null; val sig = map.bytes("signature") ?: return null
-        if (algorithm != "Ed25519" || key.size != 32 || sig.size != 64) return null
-        val rebuilt = CanonicalCbor.map(listOf("algorithm" to CanonicalCbor.text(algorithm), "public_key" to CanonicalCbor.binary(key), "signature" to CanonicalCbor.binary(sig)))
-        if (!data.contentEquals(rebuilt)) null else Proof(key, sig)
-    } catch (_: Exception) { null }
+    private fun parseProof(data: ByteArray): Proof? {
+        return try {
+            val map = Reader(data).oneMap() ?: return null
+            val algorithm = map.text("algorithm") ?: return null; val key = map.bytes("public_key") ?: return null; val sig = map.bytes("signature") ?: return null
+            if (algorithm != "Ed25519" || key.size != 32 || sig.size != 64) return null
+            val rebuilt = CanonicalCbor.map(listOf("algorithm" to CanonicalCbor.text(algorithm), "public_key" to CanonicalCbor.binary(key), "signature" to CanonicalCbor.binary(sig)))
+            if (!data.contentEquals(rebuilt)) null else Proof(key, sig)
+        } catch (_: Exception) { null }
+    }
 
     private fun grid(selector: ByteArray, payload: ByteArray, proof: ByteArray) = CanonicalCbor.tag(PromiseEnvelope.GRID_TAG, CanonicalCbor.array(3, selector, CanonicalCbor.binary(payload), CanonicalCbor.binary(proof)))
     private fun tag(cid: PromiseEnvelope.Cid) = CanonicalCbor.tag(42, CanonicalCbor.binary(byteArrayOf(0) + cid.bytes))
@@ -89,12 +93,15 @@ object InboxVerifier {
         data class Map(val values: List<Pair<V, V>>, override val encoded: ByteArray): V(encoded)
         data class Tag(val number: Long, val value: V, override val encoded: ByteArray): V(encoded)
     }
-    private fun V.cidTag(): PromiseEnvelope.Cid? = ((this as? V.Tag)?.takeIf { it.number == 42 }?.value as? V.Bytes)?.value?.let { if (it.size > 1 && it[0].toInt() == 0) runCatching { PromiseEnvelope.Cid.fromBytes(it.copyOfRange(1, it.size)) }.getOrNull() else null }
+    private fun V.cidTag(): PromiseEnvelope.Cid? = ((this as? V.Tag)?.takeIf { it.number == 42L }?.value as? V.Bytes)?.value?.let { if (it.size > 1 && it[0].toInt() == 0) runCatching { PromiseEnvelope.Cid.fromBytes(it.copyOfRange(1, it.size)) }.getOrNull() else null }
     private fun V.Map.text(key: String) = values.singleOrNull { (it.first as? V.Text)?.value == key }?.second.let { (it as? V.Text)?.value }
     private fun V.Map.bytes(key: String) = values.singleOrNull { (it.first as? V.Text)?.value == key }?.second.let { (it as? V.Bytes)?.value }
     private fun V.Map.uint(key: String) = values.singleOrNull { (it.first as? V.Text)?.value == key }?.second.let { (it as? V.UInt)?.value }
     private fun V.Map.cid(key: String) = values.singleOrNull { (it.first as? V.Text)?.value == key }?.second?.cidTag()
-    private fun V.Map.cidArray(key: String): List<PromiseEnvelope.Cid>? = ((values.singleOrNull { (it.first as? V.Text)?.value == key }?.second as? V.Array)?.values ?: return null).map { it.cidTag() ?: return null }
+    private fun V.Map.cidArray(key: String): List<PromiseEnvelope.Cid>? {
+        val values = (values.singleOrNull { (it.first as? V.Text)?.value == key }?.second as? V.Array)?.values ?: return null
+        return values.map { it.cidTag() ?: return null }
+    }
 
     /** Rejects indefinite values, duplicate/non-minimal integer encodings and trailing bytes. */
     private class Reader(private val input: ByteArray) {

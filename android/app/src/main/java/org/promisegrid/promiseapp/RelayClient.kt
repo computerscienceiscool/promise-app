@@ -18,7 +18,7 @@ class RelayClient(private val relayURL: String, val deviceID: String) {
             connection.setRequestProperty("Content-Type", "application/cbor")
             connection.setRequestProperty("Accept", "application/json")
             connection.setRequestProperty("X-Device-ID", deviceID)
-            connection.fixedLengthStreamingMode(envelope.size)
+            connection.setFixedLengthStreamingMode(envelope.size)
             connection.doOutput = true
             connection.outputStream.use { it.write(envelope) }
 
