@@ -10,6 +10,7 @@ import java.security.KeyStore
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.Signature
+import java.security.spec.ECGenParameterSpec
 
 /**
  * The device signing identity. Its private key is generated and retained by
@@ -26,7 +27,7 @@ class SigningIdentity(context: Context) {
         require(Build.VERSION.SDK_INT >= MIN_ED25519_KEYSTORE_API) {
             "This protocol requires Android $MIN_ED25519_KEYSTORE_API or later for a Keystore-backed Ed25519 key"
         }
-        keyPair = load() ?: generate()
+        keyPair = loadCompatible() ?: generate()
         removeLegacyExportedKey(context)
     }
 
@@ -36,21 +37,34 @@ class SigningIdentity(context: Context) {
         sign()
     }
 
-    private fun load(): KeyPair? {
+    private fun loadCompatible(): KeyPair? {
         val privateKey = keyStore.getKey(ALIAS, null) as? PrivateKey ?: return null
         val publicKey = keyStore.getCertificate(ALIAS)?.publicKey as? PublicKey
             ?: error("Android Keystore identity is missing its public certificate")
-        return KeyPair(publicKey, privateKey)
+        return try {
+            // A previous build created the alias with Android Keystore's
+            // default P-256 EC curve. It cannot sign this Ed25519 protocol;
+            // remove only that incompatible, POC-local key and regenerate.
+            PromiseEnvelope.rawEd25519(publicKey)
+            KeyPair(publicKey, privateKey)
+        } catch (_: IllegalArgumentException) {
+            keyStore.deleteEntry(ALIAS)
+            null
+        }
     }
 
     private fun generate(): KeyPair {
         val parameters = KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_SIGN)
+            .setAlgorithmParameterSpec(ECGenParameterSpec("ed25519"))
             .setDigests(KeyProperties.DIGEST_NONE)
             .build()
-        return KeyPairGenerator.getInstance("Ed25519", ANDROID_KEYSTORE).run {
+        val pair = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC, ANDROID_KEYSTORE).run {
             initialize(parameters)
             generateKeyPair()
         }
+        // Fail closed if a provider does not honor the requested Ed25519 curve.
+        PromiseEnvelope.rawEd25519(pair.public)
+        return pair
     }
 
     /** Keys stored by the old POC were exportable; never retain them after migration. */
