@@ -1,5 +1,6 @@
 # Promise App TODO
 
+- [x] 070 - Add two-device Android Make support
 - [x] 003 - Encode Android CIDs and signed envelopes
 - [x] 004 - Upload Android outbox envelopes
 - [x] 005 - Add Android retry and error states

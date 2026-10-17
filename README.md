@@ -86,6 +86,20 @@ make launch
 To copy the newest screenshot already saved on the connected phone into
 `.local/phone-screenshots/`, run `make pull-screenshot`.
 
+### More than one connected device
+
+List serials with `make devices`. Add `DEVICE=<serial>` to any phone command
+to operate on only that device; for example:
+
+```sh
+make install DEVICE=phone-a-serial
+make install DEVICE=phone-b-serial
+make launch DEVICE=phone-b-serial
+make usb-relay DEVICE=phone-a-serial
+```
+
+Without `DEVICE`, commands retain the normal single-device `adb` behavior.
+
 If the app does not open, run `make diagnose-phone`. It starts the app and
 prints only the relevant crash/error log. See [Troubleshooting](docs/troubleshooting.md)
 for the common USB, SDK, and relay cases.
@@ -141,7 +155,9 @@ Run `make help`. The primary commands are:
 | Purpose | Command |
 | --- | --- |
 | Test backend/protocol/peer | `make test` |
+| List connected Android devices | `make devices` |
 | Build/install app | `make install` |
+| Target one of several devices | `make install DEVICE=<serial>` |
 | Diagnose phone startup | `make diagnose-phone` |
 | Check USB bridge and relay | `make usb-relay-status` |
 | Full USB setup | `make demo-usb-setup` |
