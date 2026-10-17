@@ -40,6 +40,8 @@ func main() {
 		qrCommand(os.Args[2:])
 	case "inbox":
 		inboxCommand(os.Args[2:])
+	case "resend":
+		resendCommand(os.Args[2:])
 	default:
 		usage()
 		os.Exit(2)
@@ -47,7 +49,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: promise-peer identity [-identity-file path] | qr [-identity-file path] [-content public-text] [-out image.png] | inbox -relay URL [-identity-file path] [-inbox-dir path] [-evidence-file path] [-expect-cid message-cid]")
+	fmt.Fprintln(os.Stderr, "usage: promise-peer identity [-identity-file path] | qr [-identity-file path] [-content public-text] [-out image.png] | inbox -relay URL [-identity-file path] [-inbox-dir path] [-evidence-file path] [-expect-cid message-cid] | resend -relay URL -envelope file")
 }
 
 func identityCommand(args []string) {
@@ -141,6 +143,58 @@ func inboxCommand(args []string) {
 		encoded, _ := json.Marshal(item)
 		fmt.Println(string(encoded))
 	}
+}
+
+// resendCommand resubmits retained exact bytes to demonstrate relay
+// idempotency. It derives the required sender header from verified bytes;
+// it never signs, edits, or creates another envelope.
+func resendCommand(args []string) {
+	fs := flag.NewFlagSet("resend", flag.ExitOnError)
+	relay := fs.String("relay", "", "relay base URL")
+	envelope := fs.String("envelope", "", "verified CBOR envelope file")
+	_ = fs.Parse(args)
+	if *relay == "" || *envelope == "" {
+		fail(errors.New("-relay and -envelope are required"))
+	}
+	data, err := os.ReadFile(*envelope)
+	if err != nil {
+		fail(fmt.Errorf("read envelope: %w", err))
+	}
+	candidate, err := protocol.Verify(data)
+	if err != nil || !protocol.IsFrozenProtocol(candidate.Protocol) {
+		fail(errors.New("envelope is not a verified frozen POC message"))
+	}
+	from, err := protocol.ParseCIDTag(candidate.Payload.From)
+	if err != nil {
+		fail(fmt.Errorf("read sender identity: %w", err))
+	}
+	req, err := http.NewRequest(http.MethodPost, strings.TrimRight(*relay, "/")+"/v1/envelopes", strings.NewReader(string(data)))
+	if err != nil {
+		fail(err)
+	}
+	req.Header.Set("Content-Type", "application/cbor")
+	req.Header.Set("X-Device-ID", from.String())
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fail(fmt.Errorf("resend envelope: %w", err))
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusCreated {
+		fail(responseError(resp))
+	}
+	var result struct {
+		CID          string `json:"cid"`
+		Created      bool   `json:"created"`
+		MailboxAdded bool   `json:"mailbox_added"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		fail(fmt.Errorf("decode resend response: %w", err))
+	}
+	if result.CID != candidate.CID.String() {
+		fail(errors.New("relay returned a different CID"))
+	}
+	encoded, _ := json.Marshal(result)
+	fmt.Println(string(encoded))
 }
 
 func containsCID(items []displayMessage, expected string) bool {

@@ -7,7 +7,7 @@ RELAY ?= $(PROMISE_ADVERTISE_URL)
 DATA_DIR ?= .local/promise-relay
 PEER_DIR ?= .local/promise-peer
 
-.PHONY: help test host-build apk install launch logcat diagnose-phone pull-screenshot usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open demo-usb-setup demo-usb-verify require-admin-token peer-id peer-inbox-local peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence evidence-local clean-apk
+.PHONY: help test host-build apk install launch logcat diagnose-phone pull-screenshot usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open demo-usb-setup demo-usb-verify duplicate-local require-admin-token peer-id peer-inbox-local peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence evidence-local clean-apk
 
 help:
 	@printf '%s\n' \
@@ -25,6 +25,7 @@ help:
 	  '  make usb-relay-qr-open             Show a QR code for the USB relay URL' \
 	  '  make demo-usb-setup                Prepare the connected phone and show its recipient QR' \
 	  '  make demo-usb-verify               Verify inbox and capture audit proof; requires token' \
+	  '  make duplicate-local               Resubmit one retained message and prove one mailbox entry' \
 	  '  make usb-relay-clear              Remove the USB relay route' \
 	  '  make peer-id                      Print the persistent computer recipient CID' \
 	  '  make peer-inbox-local             Fetch and verify the computer peer inbox from this relay' \
@@ -101,6 +102,9 @@ demo-usb-setup: usb-relay usb-relay-status peer-qr-open
 # Run after the phone reports UPLOADED. The token remains an operator-held
 # input; this target never prints it.
 demo-usb-verify: require-admin-token peer-inbox-local evidence-local
+
+duplicate-local:
+	@set -eu; set -- $$(find $(PEER_DIR)/inbox -maxdepth 1 -type f -name '*.cbor' -print); test "$$#" -eq 1 || { echo 'Expected exactly one verified CBOR file in $(PEER_DIR)/inbox.' >&2; exit 2; }; message_file="$$1"; cid="$${message_file##*/}"; cid="$${cid%.cbor}"; (cd $(BACKEND_DIR) && go run ./cmd/promise-peer resend -relay http://127.0.0.1:8080 -envelope "../$$message_file"); recipient="$$(cd $(BACKEND_DIR) && go run ./cmd/promise-peer identity -identity-file ../$(PEER_DIR)/identity.ed25519)"; (cd $(BACKEND_DIR) && go run ./cmd/proof-check -data-dir ../$(DATA_DIR) -cid "$$cid" -recipient "$$recipient" -min-uploads 2 -min-fetches 2)
 
 require-admin-token:
 	@test -n "$(PROMISE_ADMIN_TOKEN)" || (echo 'Set PROMISE_ADMIN_TOKEN to the relay token' >&2; exit 2)
