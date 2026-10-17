@@ -145,6 +145,17 @@ silently author, alter, accept, or execute a user promise.
    backup/restore proof.
 7. Run adversarial and offline demonstrations; publish the review packet.
 
+## Remaining mobile delivery checklist
+
+- [ ] Finish Android canonical CID and envelope encoding.
+- [ ] Sign envelopes with the persistent device key.
+- [ ] Upload queued envelopes to the backend relay.
+- [ ] Add upload retry, status, and visible error handling.
+- [ ] Fetch recipient mailbox entries and exact envelope bytes.
+- [ ] Verify incoming envelopes and show inbox/quarantine states.
+- [ ] Test a two-device send/receive flow.
+- [ ] Commit, push, and document the demo steps.
+
 ## Definition of done
 
 The boss can inspect the source, API contract, database schema, exact stored

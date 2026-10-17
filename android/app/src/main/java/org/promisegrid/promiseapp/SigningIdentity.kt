@@ -9,6 +9,7 @@ import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
+import java.security.Signature
 
 /** POC identity. The next storage step moves the private key behind Android Keystore. */
 class SigningIdentity(context: Context) {
@@ -30,5 +31,11 @@ class SigningIdentity(context: Context) {
             .putString("private", Base64.encodeToString(pair.private.encoded, Base64.NO_WRAP))
             .putString("public", Base64.encodeToString(pair.public.encoded, Base64.NO_WRAP))
             .apply()
+    }
+
+    fun sign(bytes: ByteArray): ByteArray = Signature.getInstance("Ed25519").run {
+        initSign(keyPair.private)
+        update(bytes)
+        sign()
     }
 }
