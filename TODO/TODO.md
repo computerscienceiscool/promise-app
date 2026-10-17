@@ -64,5 +64,5 @@
 - [x] 062 - Add relay health QR probe
 - [x] 063 - Add USB relay bridge command
 - [ ] 064 - Add pasteable USB relay URL
-- [ ] 065 - Add USB relay status check
+- [x] 065 - Add USB relay status check
 - [ ] 066 - Fix relay setting persistence and verification
