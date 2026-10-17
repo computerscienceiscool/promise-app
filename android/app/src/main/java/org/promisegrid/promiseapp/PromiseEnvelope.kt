@@ -41,6 +41,16 @@ object PromiseEnvelope {
 
     fun identityCid(publicKey: PublicKey): Cid = identityCid(rawEd25519(publicKey))
 
+    /**
+     * Returns the CID of complete, immutable envelope bytes.  This is the
+     * value a person records during the two-phone proof; it is intentionally
+     * distinct from the outbox's private storage key.
+     */
+    fun envelopeCid(envelope: ByteArray): Cid {
+        require(envelope.isNotEmpty()) { "Envelope must not be empty" }
+        return cidFor(envelope, RAW_CODEC)
+    }
+
     fun identityCid(publicKey: ByteArray): Cid {
         require(publicKey.size == 32) { "Ed25519 public key must be 32 bytes" }
         val identityRecord = CanonicalCbor.map(listOf(
@@ -119,8 +129,18 @@ object PromiseEnvelope {
     }
 
     private fun isCidV1(value: ByteArray): Boolean = try {
-        val (version, offset) = readVarint(value, 0)
-        version == 1L && offset < value.size
+        val (version, afterVersion) = readVarint(value, 0)
+        if (version != 1L) {
+            false
+        } else {
+            // CIDv1 is version, codec, then a complete multihash. Do not
+            // infer a codec from the printable text: identity CIDs use a
+            // different codec and therefore need not begin with "bafk".
+            val (_, afterCodec) = readVarint(value, afterVersion)
+            val (_, afterHashCode) = readVarint(value, afterCodec)
+            val (digestLength, afterHashLength) = readVarint(value, afterHashCode)
+            digestLength == (value.size - afterHashLength).toLong()
+        }
     } catch (_: IllegalArgumentException) { false }
 
     private fun readVarint(value: ByteArray, start: Int): Pair<Long, Int> {
@@ -130,7 +150,12 @@ object PromiseEnvelope {
         while (index < value.size && shift < 64) {
             val next = value[index++].toInt() and 0xff
             result = result or ((next and 0x7f).toLong() shl shift)
-            if ((next and 0x80) == 0) return result to index
+            if ((next and 0x80) == 0) {
+                // CID varints must use their shortest representation. This
+                // also prevents several text values from representing one CID.
+                if (varint(result).size != index - start) throw IllegalArgumentException("non-canonical varint")
+                return result to index
+            }
             shift += 7
         }
         throw IllegalArgumentException("invalid varint")

@@ -32,3 +32,25 @@
 - [ ] 030 - Prove offline retry preserves one message CID
 - [ ] 031 - Inspect relay audit evidence
 - [ ] 032 - Review evidence and mark validated TODOs done
+- [ ] 033 - Start the relay for the phone demo
+- [ ] 034 - Configure the first phone relay URL
+- [ ] 035 - Install the app on a second phone
+- [ ] 036 - Copy the second phone device CID
+- [ ] 037 - Send a signed promise to the second phone
+- [ ] 038 - Refresh and inspect the second phone inbox
+- [ ] 039 - Launch the LAN relay with the demo token
+- [ ] 040 - Build the latest APK outside the sandbox
+- [ ] 041 - Install the latest APK on both phones
+- [ ] 042 - Save the LAN relay URL on both phones
+- [ ] 043 - Copy recipient CID from the second phone
+- [ ] 044 - Send and upload the first signed promise
+- [ ] 045 - Fetch and inspect recipient inbox evidence
+- [ ] 046 - Use a computer as the recipient peer
+- [ ] 047 - Build the computer peer CLI
+- [ ] 048 - Generate the computer peer identity and copy its CID
+- [ ] 049 - Start the relay for the phone-computer demo
+- [ ] 050 - Configure the phone with relay URL and computer CID
+- [ ] 051 - Send a phone promise to the computer peer
+- [ ] 052 - Fetch and verify the phone promise on the computer
+- [ ] 053 - Record audit evidence for the phone-computer demo
+- [ ] 054 - Validate the phone-computer host setup

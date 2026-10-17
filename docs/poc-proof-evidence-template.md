@@ -42,6 +42,20 @@ go run ./cmd/proof-check \
 
 Paste the `PASS` output here:
 
+## TODOs 037–038 — two-phone send and inbox inspection
+
+| Evidence | Value / attachment |
+| --- | --- |
+| Recipient CID copied from B and pasted on A | |
+| Full message CID shown on A after signing | |
+| A status/outbox is `UPLOADED` and attempt count | |
+| B first refresh status (`fetched` / failures) | |
+| B inbox full CID, `QUARANTINED`, and detail | |
+| B second refresh reports already retained; inbox count unchanged | |
+
+The device screenshots must show full CIDs. Do not put message text, private
+keys, relay tokens, or identity CIDs into this repository.
+
 ## TODO 029 — duplicate delivery, one CID
 
 | Evidence | Value / attachment |
@@ -123,3 +137,34 @@ curl --fail -sS \
 The audit log is append-only POC storage, not an independently witnessed or
 tamper-evident ledger. Its value in this demo is operator-visible correlation
 with retained exact bytes and mailbox metadata.
+
+## TODOs 052–053 — phone-to-computer fetch and audit evidence
+
+The computer peer treats a fetched envelope as `verified evidence`, not as an
+accepted promise. Retain these private artifacts outside the repository:
+
+| Artifact | Private location / observed result |
+| --- | --- |
+| Computer peer identity CID | |
+| `computer-fetch.json` verification report | |
+| Retained exact `<message CID>.cbor` path | |
+| `proof-check.txt` `PASS` result | |
+| `relay-audit.json` response | |
+| Upload and fetch event count for message CID | |
+
+From the repository root, after the phone has uploaded and the relay remains
+available, capture all artifacts in one private directory:
+
+```sh
+scripts/capture-phone-computer-evidence.sh \
+  -relay http://<computer LAN address>:8080 \
+  -token "$PROMISE_ADMIN_TOKEN" \
+  -data-dir "$PROMISE_DATA_DIR" \
+  -cid '<phone message CID>' \
+  -recipient '<computer peer CID>' \
+  -out-dir /private/demo-notes/phone-computer-proof
+```
+
+`proof-check.txt` proves retained bytes validate and have one recipient mailbox
+entry plus at least one upload and fetch audit event. The report does not prove
+acceptance, user intent, ordering, or that the audit log is tamper-evident.

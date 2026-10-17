@@ -44,6 +44,9 @@ PROMISE_ADVERTISE_URL='http://192.168.1.10:8080' \
 ./scripts/start-lan-relay.sh --dry-run
 ```
 
+Dry-run mode validates the listener and phone URL but does not create the relay
+data directory or open a network listener.
+
 If the host firewall is enabled, allow **TCP 8080 only from the private Wi-Fi
 subnet** for the duration of the demo. Remove that temporary rule afterwards.
 
@@ -70,10 +73,27 @@ failure here must be resolved before testing the app.
 1. Open **Promise App**.
 2. Enter `http://192.168.1.10:8080` in **Relay URL**.
 3. Tap **Save relay**.
-4. Copy each displayed device identity CID to the other phone's recipient field.
+4. Tap **Copy device identity**. The app confirms that the complete CID is in
+   the Android clipboard; do not try to select the shortened visual display.
+5. On the other phone, tap **Paste recipient identity** beside its recipient
+   field. Confirm it is the complete lowercase-base32 CIDv1 (it begins with
+   `b`; identity CIDs are not required to begin with `bafk`) before sending.
+
+The relay URL is saved on the device and a trailing slash is removed
+automatically. Both phones must use the same base URL. If a phone reports
+`Inbox sync failed`, first open `<relay URL>/healthz` in that phone's browser;
+do not send until it returns `{"status":"ok"}`.
 
 Use the two-device procedure in [TODO 021](../TODO/021-two-device-proof.md)
 after both phones have saved the same relay URL.
+
+### Computer recipient alternative
+
+A second phone is optional. Use the focused
+[phone-to-computer POC guide](phone-computer-demo.md) for the relay launch,
+computer identity, phone configuration, signed send, and verification steps.
+The computer peer verifies relay-returned bytes before it displays or retains
+them. See [TODO 046](../TODO/046-computer-peer-demo.md).
 
 ## Operator inspection
 

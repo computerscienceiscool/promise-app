@@ -1,6 +1,9 @@
 package org.promisegrid.promiseapp
 
 import android.app.Activity
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.util.Base64
 import android.os.Bundle
 import android.widget.Button
@@ -37,6 +40,12 @@ class MainActivity : Activity() {
         label("Promise App", 24f)
         label("Device identity (share this with a sender):", 14f)
         label(identity, 12f)
+        val status = label("Ready.")
+        button("Copy device identity") {
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(ClipData.newPlainText("Promise App device identity", identity))
+            status.text = "Device identity copied. Paste it into the sender's Recipient field."
+        }
         label("Signing key: ${Base64.encodeToString(signingIdentity.keyPair.public.encoded, Base64.NO_WRAP).take(24)}…", 12f)
         val relayURL = EditText(this).apply {
             hint = "Relay URL (for example http://192.168.1.10:8080)"
@@ -45,10 +54,20 @@ class MainActivity : Activity() {
         val recipient = EditText(this).apply {
             hint = "Recipient device identity CID"; content.addView(this)
         }
+        button("Paste recipient identity") {
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = clipboard.primaryClip
+            val pasted = clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(this)?.toString()?.trim()
+            if (pasted.isNullOrBlank()) {
+                status.text = "Clipboard has no recipient identity."
+            } else {
+                recipient.setText(pasted)
+                status.text = "Recipient identity pasted."
+            }
+        }
         val message = EditText(this).apply {
             hint = "Write a promise"; minLines = 3; content.addView(this)
         }
-        val status = label("Ready.")
         val outboxSummary = label("")
         val inboxSummary = label("")
 
@@ -56,14 +75,15 @@ class MainActivity : Activity() {
             val outboxItems = outbox.all()
             outboxSummary.text = if (outboxItems.isEmpty()) "Outbox: empty" else {
                 "Outbox (${outboxItems.size}):\n" + outboxItems.joinToString("\n") {
-                    "${it.id.take(16)}…  ${it.status}  attempts=${it.attempts}" +
+                    "${PromiseEnvelope.envelopeCid(it.envelope)}\n" +
+                        "  ${it.status}  attempts=${it.attempts}" +
                         (it.lastError?.let { error -> "  $error" } ?: "")
                 }
             }
             val inboxItems = inbox.all()
             inboxSummary.text = if (inboxItems.isEmpty()) "Inbox: empty" else {
                 "Inbox (${inboxItems.size}; local states):\n" + inboxItems.joinToString("\n") {
-                    "${it.cid.take(16)}…  ${it.state}"
+                    "${it.cid}\n  ${it.state}: ${it.detail}"
                 }
             }
         }
@@ -80,11 +100,12 @@ class MainActivity : Activity() {
                     body = message.text.toString().trim(),
                 )
                 val item = outbox.enqueue(envelope.bytes, envelope.from.toString())
+                val messageCid = envelope.cid.toString()
                 message.setText("")
-                status.text = "Signed ${envelope.cid}; queued exact bytes. Uploading…"
+                status.text = "Signed $messageCid; queued exact bytes. Uploading…"
                 refresh()
                 uploader.upload(item.id) { completed -> runOnUiThread {
-                    status.text = completed?.let { "Upload ${it.status}: ${it.id}" }
+                    status.text = completed?.let { "Upload ${it.status}: $messageCid" }
                         ?: "Upload did not find its outbox item."
                     refresh()
                 } }

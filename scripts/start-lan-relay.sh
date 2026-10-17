@@ -64,17 +64,17 @@ case "$PROMISE_ADVERTISE_URL" in
     ;;
 esac
 
-mkdir -p "$data_dir"
-
 printf 'Relay data directory: %s\n' "$data_dir"
 printf 'Relay listener:       %s\n' "$listen_addr"
 printf 'Phone relay URL:      %s\n' "$PROMISE_ADVERTISE_URL"
 printf '%s\n' 'Admin token:          configured (not displayed)'
 
 if "$dry_run"; then
-  printf '%s\n' 'Dry run complete; relay was not started.'
+  printf '%s\n' 'Dry run complete; relay was not started and no data directory was created.'
   exit 0
 fi
+
+mkdir -p "$data_dir"
 
 command -v go >/dev/null || {
   printf '%s\n' 'Go is required to start the relay.' >&2

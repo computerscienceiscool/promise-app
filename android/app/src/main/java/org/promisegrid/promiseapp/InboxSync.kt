@@ -26,6 +26,10 @@ class InboxSync(
                 onSuccess = { bytes ->
                     try {
                         inbox.retainFetched(cid, bytes, relaySource)
+                        // A relay listing is only a hint.  The verifier owns every
+                        // transition out of quarantine and re-computes the CID from
+                        // the retained bytes before considering them evidence.
+                        InboxVerifier.verify(cid, bytes, inbox)
                         fetched++
                     } catch (exception: Exception) {
                         failures += InboxFetchFailure(cid, exception.message ?: "Could not retain envelope")
