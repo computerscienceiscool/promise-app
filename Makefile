@@ -7,7 +7,7 @@ RELAY ?= $(PROMISE_ADVERTISE_URL)
 DATA_DIR ?= .local/promise-relay
 PEER_DIR ?= .local/promise-peer
 
-.PHONY: help test host-build apk install launch logcat diagnose-phone usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open peer-id peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence clean-apk
+.PHONY: help test host-build apk install launch logcat diagnose-phone usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open peer-id peer-inbox-local peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence clean-apk
 
 help:
 	@printf '%s\n' \
@@ -24,6 +24,7 @@ help:
 	  '  make usb-relay-qr-open             Show a QR code for the USB relay URL' \
 	  '  make usb-relay-clear              Remove the USB relay route' \
 	  '  make peer-id                      Print the persistent computer recipient CID' \
+	  '  make peer-inbox-local             Fetch and verify the computer peer inbox from this relay' \
 	  '  make peer-qr                      Create a scannable PNG for the recipient CID' \
 	  '  make peer-qr-open                 Create and show the recipient QR image' \
 	  '  make relay-qr-open RELAY=URL       Create and show a phone relay-health QR image' \
@@ -79,6 +80,9 @@ usb-relay-qr-open:
 
 peer-id:
 	cd $(BACKEND_DIR) && go run ./cmd/promise-peer identity -identity-file ../$(PEER_DIR)/identity.ed25519
+
+peer-inbox-local:
+	cd $(BACKEND_DIR) && go run ./cmd/promise-peer inbox -relay http://127.0.0.1:8080 -identity-file ../$(PEER_DIR)/identity.ed25519 -inbox-dir ../$(PEER_DIR)/inbox
 
 peer-qr:
 	cd $(BACKEND_DIR) && go run ./cmd/promise-peer qr -identity-file ../$(PEER_DIR)/identity.ed25519 -out ../$(PEER_DIR)/recipient-qr.png

@@ -1,8 +1,8 @@
 # Promise App TODO
 
-- [ ] 003 - Encode Android CIDs and signed envelopes
-- [ ] 004 - Upload Android outbox envelopes
-- [ ] 005 - Add Android retry and error states
+- [x] 003 - Encode Android CIDs and signed envelopes
+- [x] 004 - Upload Android outbox envelopes
+- [x] 005 - Add Android retry and error states
 - [ ] 006 - Fetch recipient mailbox envelopes
 - [ ] 007 - Verify and quarantine incoming envelopes
 - [ ] 008 - Test two-device delivery
@@ -60,9 +60,10 @@
 - [x] 058 - Handle Android Keystore Ed25519 public-key encodings
 - [x] 059 - Accept relay URL from the environment
 - [x] 060 - Add recipient QR generator
-- [ ] 061 - Allow private-LAN HTTP for the POC relay
+- [x] 061 - Allow private-LAN HTTP for the POC relay
 - [x] 062 - Add relay health QR probe
 - [x] 063 - Add USB relay bridge command
 - [ ] 064 - Add pasteable USB relay URL
 - [x] 065 - Add USB relay status check
 - [ ] 066 - Fix relay setting persistence and verification
+- [x] 067 - Add local computer peer inbox command
