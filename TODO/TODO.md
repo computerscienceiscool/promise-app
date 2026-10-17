@@ -30,7 +30,7 @@
 - [ ] 028 - Send and verify a first signed message
 - [ ] 029 - Prove duplicate delivery preserves one message CID
 - [ ] 030 - Prove offline retry preserves one message CID
-- [ ] 031 - Inspect relay audit evidence
+- [x] 031 - Inspect relay audit evidence
 - [ ] 032 - Review evidence and mark validated TODOs done
 - [ ] 033 - Start the relay for the phone demo
 - [ ] 034 - Configure the first phone relay URL
@@ -52,7 +52,7 @@
 - [x] 050 - Configure the phone with relay URL and computer CID
 - [x] 051 - Send a phone promise to the computer peer
 - [x] 052 - Fetch and verify the phone promise on the computer
-- [ ] 053 - Record audit evidence for the phone-computer demo
+- [x] 053 - Record audit evidence for the phone-computer demo
 - [ ] 054 - Validate the phone-computer host setup
 - [x] 055 - Add common Make commands
 - [x] 056 - Reject placeholder relay URLs
@@ -67,4 +67,4 @@
 - [x] 065 - Add USB relay status check
 - [ ] 066 - Fix relay setting persistence and verification
 - [x] 067 - Add local computer peer inbox command
-- [ ] 068 - Capture local phone-computer audit evidence
+- [x] 068 - Capture local phone-computer audit evidence
