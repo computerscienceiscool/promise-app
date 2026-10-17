@@ -47,7 +47,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: promise-peer identity [-identity-file path] | qr [-identity-file path] [-out recipient.png] | inbox -relay URL [-identity-file path] [-inbox-dir path] [-evidence-file path] [-expect-cid message-cid]")
+	fmt.Fprintln(os.Stderr, "usage: promise-peer identity [-identity-file path] | qr [-identity-file path] [-content public-text] [-out image.png] | inbox -relay URL [-identity-file path] [-inbox-dir path] [-evidence-file path] [-expect-cid message-cid]")
 }
 
 func identityCommand(args []string) {
@@ -74,26 +74,30 @@ func identityCommand(args []string) {
 func qrCommand(args []string) {
 	fs := flag.NewFlagSet("qr", flag.ExitOnError)
 	identityPath := fs.String("identity-file", defaultIdentityFile, "private identity file")
+	content := fs.String("content", "", "public text to encode; defaults to this peer CID")
 	out := fs.String("out", "recipient-qr.png", "public PNG output path")
 	_ = fs.Parse(args)
-	id, _, err := loadOrCreateIdentity(*identityPath)
-	if err != nil {
-		fail(err)
-	}
-	cid, err := id.cid()
-	if err != nil {
-		fail(err)
+	encoded := *content
+	if encoded == "" {
+		id, _, err := loadOrCreateIdentity(*identityPath)
+		if err != nil {
+			fail(err)
+		}
+		encoded, err = id.cid()
+		if err != nil {
+			fail(err)
+		}
 	}
 	if err := os.MkdirAll(filepath.Dir(*out), 0755); err != nil {
 		fail(fmt.Errorf("create QR output directory: %w", err))
 	}
-	if err := qrcode.WriteFile(cid, qrcode.Medium, 512, *out); err != nil {
+	if err := qrcode.WriteFile(encoded, qrcode.Medium, 512, *out); err != nil {
 		fail(fmt.Errorf("write QR PNG: %w", err))
 	}
 	if err := os.Chmod(*out, 0644); err != nil {
 		fail(fmt.Errorf("set QR PNG permissions: %w", err))
 	}
-	fmt.Printf("Recipient CID: %s\nQR PNG: %s\n", cid, *out)
+	fmt.Printf("QR content: %s\nQR PNG: %s\n", encoded, *out)
 }
 
 func inboxCommand(args []string) {
