@@ -61,12 +61,25 @@ object PromiseEnvelope {
     }
 
     fun rawEd25519(publicKey: PublicKey): ByteArray {
-        // RFC 8410 SubjectPublicKeyInfo encoding: 30 2a ... 03 21 00 || 32 raw bytes.
+        // Android Keystore providers legitimately emit either RFC 8410's
+        // parameter-free SPKI or a legacy SPKI with an explicit ASN.1 NULL
+        // parameter. Both carry the same Ed25519 OID and a 32-byte BIT STRING.
         val encoded = publicKey.encoded
-        require(encoded.size == 44 && encoded.copyOfRange(0, 12).contentEquals(ED25519_SPKI_PREFIX)) {
+        val oidAt = encoded.indexOf(ED25519_OID)
+        require(oidAt >= 0) { "unsupported Ed25519 public key encoding" }
+        var bitStringAt = oidAt + ED25519_OID.size
+        if (encoded.size >= bitStringAt + 2 && encoded[bitStringAt] == 0x05.toByte() && encoded[bitStringAt + 1] == 0x00.toByte()) {
+            bitStringAt += 2
+        }
+        require(
+            encoded.size == bitStringAt + 35 &&
+                encoded[bitStringAt] == 0x03.toByte() &&
+                encoded[bitStringAt + 1] == 0x21.toByte() &&
+                encoded[bitStringAt + 2] == 0x00.toByte(),
+        ) {
             "unsupported Ed25519 public key encoding"
         }
-        return encoded.copyOfRange(12, 44)
+        return encoded.copyOfRange(bitStringAt + 3, encoded.size)
     }
 
     fun offer(
@@ -196,5 +209,13 @@ object PromiseEnvelope {
         return result.toByteArray()
     }
 
-    private val ED25519_SPKI_PREFIX = byteArrayOf(0x30, 0x2a, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x03, 0x21, 0x00)
+    private val ED25519_OID = byteArrayOf(0x06, 0x03, 0x2b, 0x65, 0x70)
+
+    private fun ByteArray.indexOf(needle: ByteArray): Int {
+        if (needle.isEmpty() || needle.size > size) return -1
+        for (start in 0..size - needle.size) {
+            if (copyOfRange(start, start + needle.size).contentEquals(needle)) return start
+        }
+        return -1
+    }
 }

@@ -57,3 +57,4 @@
 - [x] 055 - Add common Make commands
 - [x] 056 - Reject placeholder relay URLs
 - [x] 057 - Add phone launch and diagnostic commands
+- [ ] 058 - Handle Android Keystore Ed25519 public-key encodings
