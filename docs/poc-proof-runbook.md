@@ -1,9 +1,10 @@
 # Promise App POC proof runbook
 
-This runbook produces evidence for the boss-facing demo without treating the
-relay, a push/availability hint, or an incoming byte stream as authority.  It
-is intentionally a two-device manual test: the values shown on the two phones
-are the evidence to record.
+This runbook describes the remaining two-device proof. It is separate from the
+completed one-phone-to-computer proof in [example-poc.md](example-poc.md).
+It produces evidence without treating the relay, a push/availability hint, or
+an incoming byte stream as authority. The values shown on the two phones are
+evidence to record.
 
 ## Preconditions
 
@@ -16,14 +17,13 @@ are the evidence to record.
 
 ## 1. Start and inspect the relay
 
-From `promise-app/backend`, run the relay on the development computer's LAN
-address.  Replace `192.168.1.10` with the computer's actual Wi-Fi IPv4 address.
+From `promise-app`, start the relay on the development computer's LAN address.
+Replace `192.168.1.10` with the computer's actual Wi-Fi IPv4 address.
 
 ```sh
 export PROMISE_DATA_DIR=/tmp/promise-app-poc-data
-export PROMISE_ADMIN_TOKEN=local-demo
-export PROMISE_LISTEN_ADDR=0.0.0.0:8080
-go run ./cmd/promise-server
+export PROMISE_ADMIN_TOKEN='fresh-local-demo-secret'
+RELAY=http://192.168.1.10:8080 DATA_DIR="$PROMISE_DATA_DIR" make relay
 ```
 
 In another terminal, confirm the relay is alive:
@@ -46,7 +46,8 @@ On both devices, open **Promise App**, enter
    `UPLOADED`. This demonstrates the exact signed bytes were persisted before
    upload and accepted by the relay.
 4. On B, tap **Refresh inbox**. Record that the status reports one fetched
-   envelope and the inbox lists the same CID as `QUARANTINED`.
+   envelope and the inbox lists the same CID as `CANDIDATE_EVIDENCE` after
+   local format, CID, signature, sender, and recipient verification.
 5. Tap **Refresh inbox** again. It must report the item as already retained;
    the inbox must not gain a duplicate item.
 
@@ -60,13 +61,13 @@ go run ./cmd/proof-check \
   -recipient '<device-B identity CID>'
 ```
 
-The expected `QUARANTINED` state is important: fetched relay bytes are not an
-automatic acceptance, execution, or trust decision.
+The expected `CANDIDATE_EVIDENCE` state is important: local verification does
+not make relay bytes an automatic acceptance, execution, or trust decision.
 
 ## 3. Prove restart recovery
 
 1. On B, force-stop Promise App in Android Settings, then reopen it.
-2. Confirm the same inbox CID and `QUARANTINED` state remain visible.
+2. Confirm the same inbox CID and `CANDIDATE_EVIDENCE` state remain visible.
 3. On A, force-stop and reopen the app. Confirm the uploaded outbox item and
    its CID remain visible.
 
@@ -84,7 +85,7 @@ automatic acceptance, execution, or trust decision.
    Confirm the same CID, not a newly generated CID, reaches `UPLOADED` and its
    attempt count increases.
 5. On B, tap **Refresh inbox** and confirm that same retry CID appears once as
-   `QUARANTINED`. Refresh again and confirm no duplicate is retained.
+   `CANDIDATE_EVIDENCE`. Refresh again and confirm no duplicate is retained.
 
 The relay cannot attest that A was offline before upload. The offline part of
 this proof is the device A outbox state, attempt count, and before/after
@@ -124,7 +125,7 @@ With the relay still running, retrieve the append-only audit log:
 
 ```sh
 curl -fsS \
-  -H 'Authorization: Bearer local-demo' \
+  -H "Authorization: Bearer $PROMISE_ADMIN_TOKEN" \
   http://127.0.0.1:8080/v1/admin/audit
 ```
 
@@ -154,7 +155,7 @@ Record the following in the demo notes before checking off TODO 021:
 | No duplicate delivery | second refresh result and unchanged inbox count |
 | Restart recovery | before/after screenshots of the same outbox and inbox CIDs |
 | Offline retry | same CID before and after retry, state/attempt count change |
-| Backend boundary | `QUARANTINED` on B; no automatic acceptance/effect |
+| Backend boundary | `CANDIDATE_EVIDENCE` on B; no automatic acceptance/effect |
 
 ## Closeout gate
 

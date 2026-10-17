@@ -147,6 +147,7 @@ Run `make help`. The primary commands are:
 | Full USB setup | `make demo-usb-setup` |
 | Verify inbox | `make peer-inbox-local` |
 | Capture audit proof | `make demo-usb-verify PROMISE_ADMIN_TOKEN=...` |
+| Validate host and APK | `make validate RELAY=http://LAN-IP:8080 APK=android/app/build/outputs/apk/debug/app-debug.apk` |
 
 ## Evidence and documentation
 

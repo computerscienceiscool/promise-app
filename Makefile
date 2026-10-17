@@ -7,7 +7,7 @@ RELAY ?= $(PROMISE_ADVERTISE_URL)
 DATA_DIR ?= .local/promise-relay
 PEER_DIR ?= .local/promise-peer
 
-.PHONY: help test host-build apk install launch logcat diagnose-phone pull-screenshot usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open demo-usb-setup demo-usb-verify peer-id peer-inbox-local peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence evidence-local clean-apk
+.PHONY: help test host-build apk install launch logcat diagnose-phone pull-screenshot usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open demo-usb-setup demo-usb-verify require-admin-token peer-id peer-inbox-local peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence evidence-local clean-apk
 
 help:
 	@printf '%s\n' \
@@ -33,7 +33,7 @@ help:
 	  '  make relay-qr-open RELAY=URL       Create and show a phone relay-health QR image' \
 	  '  make relay-preflight RELAY=URL    Validate a planned LAN relay URL' \
 	  '  make relay RELAY=URL               Start relay; requires PROMISE_ADMIN_TOKEN' \
-	  '  make validate APK=PATH             Validate host tools and an APK' \
+	  '  make validate RELAY=URL APK=PATH   Validate host tools, a LAN URL, and an APK' \
 	  '  make evidence RELAY=URL CID=CID    Capture proof; also requires token/data/recipient/out-dir' \
 	  '  make evidence-local                Capture audit proof for the one verified local inbox message'
 
@@ -100,7 +100,10 @@ demo-usb-setup: usb-relay usb-relay-status peer-qr-open
 
 # Run after the phone reports UPLOADED. The token remains an operator-held
 # input; this target never prints it.
-demo-usb-verify: peer-inbox-local evidence-local
+demo-usb-verify: require-admin-token peer-inbox-local evidence-local
+
+require-admin-token:
+	@test -n "$(PROMISE_ADMIN_TOKEN)" || (echo 'Set PROMISE_ADMIN_TOKEN to the relay token' >&2; exit 2)
 
 peer-id:
 	cd $(BACKEND_DIR) && go run ./cmd/promise-peer identity -identity-file ../$(PEER_DIR)/identity.ed25519
@@ -129,15 +132,16 @@ relay:
 	PROMISE_ADVERTISE_URL="$(RELAY)" PROMISE_DATA_DIR="$(DATA_DIR)" ./scripts/start-lan-relay.sh
 
 validate:
+	@test -n "$(RELAY)" || (echo 'Set RELAY=http://LAN-IP:8080' >&2; exit 2)
 	@test -n "$(APK)" || (echo 'Set APK=path/to/app-debug.apk' >&2; exit 2)
-	./scripts/validate-phone-computer-host.sh -apk "$(APK)"
+	./scripts/validate-phone-computer-host.sh -relay "$(RELAY)" -apk "$(APK)"
 
 evidence:
 	@test -n "$(RELAY)" && test -n "$(CID)" && test -n "$(RECIPIENT)" && test -n "$(OUT_DIR)" && test -n "$(PROMISE_ADMIN_TOKEN)" || (echo 'Set RELAY, CID, RECIPIENT, OUT_DIR, and PROMISE_ADMIN_TOKEN' >&2; exit 2)
 	./scripts/capture-phone-computer-evidence.sh -relay "$(RELAY)" -token "$(PROMISE_ADMIN_TOKEN)" -data-dir "$(DATA_DIR)" -cid "$(CID)" -recipient "$(RECIPIENT)" -out-dir "$(OUT_DIR)"
 
 evidence-local:
-	@test -n "$(PROMISE_ADMIN_TOKEN)" || (echo 'Set PROMISE_ADMIN_TOKEN to the relay token' >&2; exit 2)
+	@$(MAKE) --no-print-directory require-admin-token
 	@set -eu; set -- $$(find $(PEER_DIR)/inbox -maxdepth 1 -type f -name '*.cbor' -print); test "$$#" -eq 1 || { echo 'Expected exactly one verified CBOR file in $(PEER_DIR)/inbox; use make evidence with explicit CID instead.' >&2; exit 2; }; message_file="$$1"; cid="$${message_file##*/}"; cid="$${cid%.cbor}"; recipient="$$(cd $(BACKEND_DIR) && go run ./cmd/promise-peer identity -identity-file ../$(PEER_DIR)/identity.ed25519)"; ./scripts/capture-phone-computer-evidence.sh -relay http://127.0.0.1:8080 -token "$(PROMISE_ADMIN_TOKEN)" -data-dir .local/promise-relay -cid "$$cid" -recipient "$$recipient" -out-dir .local/promise-evidence/"$$cid"
 
 clean-apk:

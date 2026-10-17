@@ -1,91 +1,100 @@
 # Phone-to-computer Promise POC
 
-This is the shortest boss-facing demonstration: one Android/Kindle phone sends
-one signed promise to a computer-owned recipient identity. The relay stores and
-routes bytes; it does not accept, alter, or execute the promise.
+This is the canonical, reproducible demonstration path for the current POC:
+one Android phone sends one signed message to a computer-owned recipient
+identity. The relay stores and routes exact bytes; it does not accept, alter,
+or execute the promise.
 
-## Before the demo
+The preferred route is USB forwarding. It was used for the completed proof
+because it avoids Wi-Fi client-isolation problems. It is a local implementation
+choice, not a PromiseGrid transport rule.
 
-- The computer and phone must be on the same private Wi-Fi network.
-- Build and install the current debug APK on the phone.
-- Select the computer's private LAN IPv4 address, such as `192.168.1.10`.
-  Do not use `localhost` or `127.0.0.1`; those name the phone itself when used
-  on the phone.
-- From `promise-app`, choose a new private admin token. Keep it on the
-  computer; it is never entered in the app.
+## Requirements
 
-## TODO 049 — start the relay
+- A built debug APK, an Android phone with USB debugging enabled, and a USB
+  data cable.
+- Go, JDK 17, Android SDK/ADB, `make`, and `curl` on the computer.
+- A fresh private relay admin token. Keep it only on the computer.
+- A private LAN address for the computer, even for USB forwarding: the relay
+  process advertises and validates that host address while the phone uses its
+  USB-local URL.
 
-In terminal one, from `promise-app`, start the private-LAN relay:
+See [README installation](../README.md#install) and
+[Troubleshooting](troubleshooting.md) for setup failures.
 
-```sh
-export PROMISE_ADMIN_TOKEN='a-new-long-private-demo-token'
-export PROMISE_ADVERTISE_URL='http://192.168.1.10:8080'
-./scripts/start-lan-relay.sh
-```
+## 1. Start the relay
 
-Leave this terminal open. In a second terminal, verify the host service before
-involving the phone:
-
-```sh
-curl --fail http://127.0.0.1:8080/healthz
-# {"status":"ok"}
-```
-
-Before the phone steps, run the host validation. It runs the backend tests,
-checks the desktop peer identity, validates an optional APK, and checks both
-the loopback and LAN health endpoints without sending a message:
+In terminal one, replace the sample address and secret, then leave the relay
+running:
 
 ```sh
-./scripts/validate-phone-computer-host.sh \
-  -relay "$PROMISE_ADVERTISE_URL" \
-  -apk android/app/build/outputs/apk/debug/app-debug.apk \
-  --check-relay
+cd ~/lab/cswg/apps/promise-app
+RELAY=http://YOUR-LAN-IP:8080 \
+PROMISE_ADMIN_TOKEN='fresh-local-demo-secret' \
+make relay
 ```
 
-If the computer firewall is enabled, allow TCP 8080 only from the private Wi-Fi
-network for this demo. Never expose this HTTP relay to the public Internet.
+The terminal must report that the relay is listening on `0.0.0.0:8080`.
 
-## TODO 050 — configure the phone and computer identity
+## 2. Install the app and prepare USB routing
 
-In terminal two, prepare a persistent computer identity and print the exact
-values required by the phone:
+In terminal two:
 
 ```sh
-cd promise-app
-PROMISE_ADVERTISE_URL='http://192.168.1.10:8080' \
-  ./scripts/prepare-phone-computer-demo.sh
+make install
+make demo-usb-setup
 ```
 
-The script creates the private computer key under `.local/` with restricted
-permissions on first use and prints a public CID. It does not start a relay or
-send any data.
+`demo-usb-setup` verifies the local relay health, maps the phone's
+`127.0.0.1:8080` to the computer over USB, and opens a QR code containing the
+persistent computer recipient CID.
 
-On the phone:
+## 3. Send from the phone
 
 1. Open **Promise App**.
-2. Set **Relay URL** to the printed LAN URL, then tap **Save relay**.
-3. Paste the printed **Computer peer CID** into **Recipient device identity
-   CID**. Confirm it is the complete lowercase-base32 CIDv1 (it begins with
-   `b`; the computer identity CID is not required to begin with `bafk`).
+2. Select **Use USB relay**. Confirm `Active relay: http://127.0.0.1:8080`.
+3. Scan or copy the computer recipient QR, then select **Paste recipient
+   identity**.
+4. Enter a non-sensitive test body, such as `test`.
+5. Select **Sign, queue, and upload**.
+6. Record the message CID and wait for `UPLOADED` in the phone outbox.
 
-Optionally, open `<relay URL>/healthz` in the phone browser first. It must show
-`{"status":"ok"}`. Fix Wi-Fi, firewall, VPN, or guest-network isolation before
-sending if it does not.
+`UPLOADED` means the phone queued immutable signed bytes and the relay accepted
+them. It does not mean the computer or a person accepted the promise.
 
-## TODO 051 — sign and send the phone promise
+## 4. Verify on the computer
 
-Enter a distinctive, non-sensitive test message, for example:
+After the phone shows `UPLOADED`, run:
 
-```text
-POC-PHONE-COMPUTER-2026-10-17: I will review the proposal.
+```sh
+PROMISE_ADMIN_TOKEN='the-same-relay-token' make demo-usb-verify
 ```
 
-Tap **Sign, queue, and upload**. Record the message CID shown in the phone's
-outbox status and wait for its state to become `UPLOADED`. A CID and uploaded
-state demonstrate that the phone persisted exact signed bytes before relay
-upload; they do not imply that the computer has accepted the promise.
+This command fetches the computer inbox, verifies the exact envelope bytes,
+and captures the correlated local relay audit evidence. It fails if there is
+not exactly one verified inbox message or if the evidence cannot be matched.
 
-Continue with [TODO 052](../TODO/052-fetch-computer-promise.md) to fetch and
-verify the bytes on the computer, then [TODO 053](../TODO/053-record-phone-computer-audit.md)
-to preserve the evidence.
+For a completed example, including the phone screenshot, QR image, message
+CID, verifier output, and stated limits, see [example-poc.md](example-poc.md).
+
+## Optional private-LAN route
+
+Use this only when the phone browser can reach the computer's private-LAN URL.
+Before starting the relay, run:
+
+```sh
+make relay-preflight RELAY=http://YOUR-LAN-IP:8080
+```
+
+Start the relay as in step 1. On the phone, enter
+`http://YOUR-LAN-IP:8080`, select **Save relay**, and open
+`http://YOUR-LAN-IP:8080/healthz` in the phone browser. It must return
+`{"status":"ok"}` before sending. Do not use `127.0.0.1` for this route;
+on a phone it names the phone itself.
+
+## Scope
+
+This POC has physically proved the one-phone-to-computer path. It has not yet
+proved two-phone or Kindle delivery, offline retry, duplicate upload handling,
+production TLS, key recovery, or recipient acceptance. See
+[the two-device proof runbook](poc-proof-runbook.md) for the remaining tests.

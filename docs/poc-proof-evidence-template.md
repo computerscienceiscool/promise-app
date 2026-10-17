@@ -28,7 +28,7 @@ under current provisional Guide orientation (`DR-tuhaz`).
 | Message CID shown on device A | |
 | A outbox state is `UPLOADED` | |
 | B refresh result | |
-| B inbox CID and `QUARANTINED` state | |
+| B inbox CID and `CANDIDATE_EVIDENCE` state after local verification | |
 | First refresh screenshot | |
 
 Run the verifier after the recipient fetched the message:
@@ -50,7 +50,7 @@ Paste the `PASS` output here:
 | Full message CID shown on A after signing | |
 | A status/outbox is `UPLOADED` and attempt count | |
 | B first refresh status (`fetched` / failures) | |
-| B inbox full CID, `QUARANTINED`, and detail | |
+| B inbox full CID, `CANDIDATE_EVIDENCE`, and verification detail | |
 | B second refresh reports already retained; inbox count unchanged | |
 
 The device screenshots must show full CIDs. Do not put message text, private

@@ -1,16 +1,21 @@
 # Device-Reachable Relay Setup
 
-This procedure starts the POC relay on the development computer so that Android
-devices on the same private Wi-Fi network can reach it. It is for an observed
-demo only: it intentionally exposes an unauthenticated HTTP transport on a
-private network. Signed envelopes still protect their bytes and sender proof,
-but HTTP does not provide confidentiality or endpoint authentication. Use HTTPS
-behind a reverse proxy for any deployment outside this local demonstration.
+This procedure starts the POC relay on the development computer for the
+optional private-LAN route. For the proven and recommended connected-phone
+route, use [phone-computer-demo.md](phone-computer-demo.md): it maps the phone
+to the host relay through USB and avoids Wi-Fi client-isolation problems.
+
+This private-LAN route is for an observed POC only. It intentionally exposes
+unauthenticated HTTP on a private network. Signed envelopes protect their bytes
+and sender proof, but HTTP does not provide confidentiality or endpoint
+authentication. Use HTTPS behind a reverse proxy for any deployment outside a
+local demonstration.
 
 ## Preconditions
 
-1. Build and install the **debug** APK. Its debug-only manifest permits a
-   private-LAN `http://` URL. A release APK must use `https://`.
+1. Build and install the POC APK. Its current manifest permits private-LAN
+   `http://` for the demo. Do not treat the current configuration as suitable
+   for a production or release deployment; production must use HTTPS.
 2. Put the computer and each test device on the same Wi-Fi network. Mobile data,
    guest Wi-Fi, client isolation, and a VPN can prevent device-to-computer
    traffic.
@@ -22,30 +27,26 @@ behind a reverse proxy for any deployment outside this local demonstration.
 
 ## Start the relay from source
 
-From `promise-app`, choose a new admin token, set the host's actual private-LAN
-address, and use the launcher. It creates a persistent, ignored data directory
-at `.local/relay-data` unless `PROMISE_DATA_DIR` is set:
+From `promise-app`, choose a new admin token and set the host's actual
+private-LAN address. First validate the intended LAN URL without starting a
+listener:
 
 ```sh
-export PROMISE_ADMIN_TOKEN='replace-with-a-long-random-demo-token'
-export PROMISE_ADVERTISE_URL='http://192.168.1.10:8080'
-./scripts/start-lan-relay.sh
+make relay-preflight RELAY=http://192.168.1.10:8080
+```
+
+Then start the relay. The Make target creates persistent, ignored data at
+`.local/promise-relay` unless `DATA_DIR` is set:
+
+```sh
+RELAY=http://192.168.1.10:8080 \
+PROMISE_ADMIN_TOKEN='replace-with-a-long-random-demo-token' \
+make relay
 ```
 
 The startup line must say `promise relay listening on 0.0.0.0:8080`. Leave this
 terminal open during the demonstration. Do not print, share, or enter the admin
 token in the phone app.
-
-Check the configuration without starting the relay:
-
-```sh
-PROMISE_ADMIN_TOKEN='replace-with-a-long-random-demo-token' \
-PROMISE_ADVERTISE_URL='http://192.168.1.10:8080' \
-./scripts/start-lan-relay.sh --dry-run
-```
-
-Dry-run mode validates the listener and phone URL but does not create the relay
-data directory or open a network listener.
 
 If the host firewall is enabled, allow **TCP 8080 only from the private Wi-Fi
 subnet** for the duration of the demo. Remove that temporary rule afterwards.

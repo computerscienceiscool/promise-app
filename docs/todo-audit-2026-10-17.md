@@ -51,16 +51,20 @@ real host LAN, the authorized Android phone, or an observed user action:
 7. **TODOs 022 and 032:** only check parent/demo TODOs off after the evidence
    template has real observed values.
 
-## Important implementation boundary
+## Current implementation correction
 
-The Android inbox currently retains fetched relay bytes as `QUARANTINED`.
-That is intentional and visible in TODO 007: it does **not** yet run the
-strict decoder/signature verification needed to transition Android inbox items
-to `CANDIDATE_EVIDENCE`. The computer peer *does* perform frozen-protocol
-verification before retaining/displaying bytes, making it the appropriate
-recipient for the one-phone/one-computer proof.
+This dated audit originally described an earlier Android inbox. The current
+Android implementation retains fetched bytes in `QUARANTINED`, then immediately
+performs strict format, CID, frozen-pCID, canonical payload/proof, Ed25519,
+sender-binding, and recipient checks. A successful result becomes
+`CANDIDATE_EVIDENCE`; failure remains a specific local rejection state.
 
-Do not state that Android has accepted, trusted, or executed a promise. An
-uploaded CID proves only that immutable signed bytes were retained by the
-relay; computer-peer verification proves byte/protocol/signature validity;
+That implementation is present, but a physical two-phone observation remains
+open in TODOs 006--008 and 021. The computer peer has physically completed the
+one-phone-to-computer verification path recorded in
+[`example-poc.md`](example-poc.md).
+
+Do not state that either Android or the computer accepted, trusted, or executed
+a promise. An uploaded CID proves only that immutable signed bytes were
+retained by the relay; verification proves byte/protocol/signature validity;
 neither proves a recipient's acceptance.
