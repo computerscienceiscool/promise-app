@@ -7,7 +7,7 @@ RELAY ?= $(PROMISE_ADVERTISE_URL)
 DATA_DIR ?= .local/promise-relay
 PEER_DIR ?= .local/promise-peer
 
-.PHONY: help test host-build apk install launch logcat diagnose-phone peer-id relay-preflight relay validate evidence clean-apk
+.PHONY: help test host-build apk install launch logcat diagnose-phone peer-id peer-qr peer-qr-open relay-preflight relay validate evidence clean-apk
 
 help:
 	@printf '%s\n' \
@@ -20,6 +20,8 @@ help:
 	  '  make logcat                       Show Promise App crash/error logs' \
 	  '  make diagnose-phone               Clear logs, launch app, then show crash/errors' \
 	  '  make peer-id                      Print the persistent computer recipient CID' \
+	  '  make peer-qr                      Create a scannable PNG for the recipient CID' \
+	  '  make peer-qr-open                 Create and show the recipient QR image' \
 	  '  make relay-preflight RELAY=URL    Validate a planned LAN relay URL' \
 	  '  make relay RELAY=URL               Start relay; requires PROMISE_ADMIN_TOKEN' \
 	  '  make validate APK=PATH             Validate host tools and an APK' \
@@ -52,6 +54,12 @@ diagnose-phone:
 
 peer-id:
 	cd $(BACKEND_DIR) && go run ./cmd/promise-peer identity -identity-file ../$(PEER_DIR)/identity.ed25519
+
+peer-qr:
+	cd $(BACKEND_DIR) && go run ./cmd/promise-peer qr -identity-file ../$(PEER_DIR)/identity.ed25519 -out ../$(PEER_DIR)/recipient-qr.png
+
+peer-qr-open: peer-qr
+	xdg-open $(PEER_DIR)/recipient-qr.png
 
 relay-preflight:
 	@test -n "$(RELAY)" || (echo 'Set RELAY=http://LAN-IP:8080' >&2; exit 2)

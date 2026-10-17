@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/promisegrid/promise-app/backend/internal/protocol"
+	"github.com/skip2/go-qrcode"
 )
 
 const defaultIdentityFile = ".promise-peer/identity.ed25519"
@@ -35,6 +36,8 @@ func main() {
 	switch os.Args[1] {
 	case "identity":
 		identityCommand(os.Args[2:])
+	case "qr":
+		qrCommand(os.Args[2:])
 	case "inbox":
 		inboxCommand(os.Args[2:])
 	default:
@@ -44,7 +47,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: promise-peer identity [-identity-file path] | inbox -relay URL [-identity-file path] [-inbox-dir path] [-evidence-file path] [-expect-cid message-cid]")
+	fmt.Fprintln(os.Stderr, "usage: promise-peer identity [-identity-file path] | qr [-identity-file path] [-out recipient.png] | inbox -relay URL [-identity-file path] [-inbox-dir path] [-evidence-file path] [-expect-cid message-cid]")
 }
 
 func identityCommand(args []string) {
@@ -63,6 +66,34 @@ func identityCommand(args []string) {
 		fmt.Fprintf(os.Stderr, "created private identity at %s\n", *path)
 	}
 	fmt.Println(cid)
+}
+
+// qrCommand writes a public, phone-scannable QR image containing only the
+// recipient CID. It never embeds the private identity key, relay token, or a
+// promise message.
+func qrCommand(args []string) {
+	fs := flag.NewFlagSet("qr", flag.ExitOnError)
+	identityPath := fs.String("identity-file", defaultIdentityFile, "private identity file")
+	out := fs.String("out", "recipient-qr.png", "public PNG output path")
+	_ = fs.Parse(args)
+	id, _, err := loadOrCreateIdentity(*identityPath)
+	if err != nil {
+		fail(err)
+	}
+	cid, err := id.cid()
+	if err != nil {
+		fail(err)
+	}
+	if err := os.MkdirAll(filepath.Dir(*out), 0755); err != nil {
+		fail(fmt.Errorf("create QR output directory: %w", err))
+	}
+	if err := qrcode.WriteFile(cid, qrcode.Medium, 512, *out); err != nil {
+		fail(fmt.Errorf("write QR PNG: %w", err))
+	}
+	if err := os.Chmod(*out, 0644); err != nil {
+		fail(fmt.Errorf("set QR PNG permissions: %w", err))
+	}
+	fmt.Printf("Recipient CID: %s\nQR PNG: %s\n", cid, *out)
 }
 
 func inboxCommand(args []string) {

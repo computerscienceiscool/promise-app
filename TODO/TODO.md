@@ -59,3 +59,4 @@
 - [x] 057 - Add phone launch and diagnostic commands
 - [x] 058 - Handle Android Keystore Ed25519 public-key encodings
 - [x] 059 - Accept relay URL from the environment
+- [x] 060 - Add recipient QR generator
