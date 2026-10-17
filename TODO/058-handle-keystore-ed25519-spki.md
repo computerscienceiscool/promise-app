@@ -6,3 +6,6 @@ Ed25519 OID and an exact 32-byte BIT STRING.
 
 Also rotate the incompatible local P-256 key created by the early POC build
 and generate an explicit `ECGenParameterSpec("ed25519")` Android Keystore key.
+
+Completed 2026-10-17. The rebuilt app launched through `make diagnose-phone`
+on the authorized physical device with no Android runtime crash.
