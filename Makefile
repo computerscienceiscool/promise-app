@@ -7,7 +7,7 @@ RELAY ?= $(PROMISE_ADVERTISE_URL)
 DATA_DIR ?= .local/promise-relay
 PEER_DIR ?= .local/promise-peer
 
-.PHONY: help test host-build apk install launch logcat diagnose-phone peer-id peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence clean-apk
+.PHONY: help test host-build apk install launch logcat diagnose-phone usb-relay usb-relay-clear peer-id peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence clean-apk
 
 help:
 	@printf '%s\n' \
@@ -19,6 +19,8 @@ help:
 	  '  make launch                       Start Promise App on the connected phone' \
 	  '  make logcat                       Show Promise App crash/error logs' \
 	  '  make diagnose-phone               Clear logs, launch app, then show crash/errors' \
+	  '  make usb-relay                    Route phone localhost:8080 to this computer over USB' \
+	  '  make usb-relay-clear              Remove the USB relay route' \
 	  '  make peer-id                      Print the persistent computer recipient CID' \
 	  '  make peer-qr                      Create a scannable PNG for the recipient CID' \
 	  '  make peer-qr-open                 Create and show the recipient QR image' \
@@ -52,6 +54,16 @@ diagnose-phone:
 	adb shell am start -n org.promisegrid.promiseapp/.MainActivity
 	sleep 2
 	$(MAKE) logcat
+
+# Developer/demo fallback when a Wi-Fi network isolates clients. Keep the
+# relay running on the computer, then point the phone app at
+# http://127.0.0.1:8080 after this command succeeds.
+usb-relay:
+	adb reverse tcp:8080 tcp:8080
+	@echo 'USB relay is ready. In Promise App, set Relay URL to http://127.0.0.1:8080 and tap Save relay.'
+
+usb-relay-clear:
+	adb reverse --remove tcp:8080
 
 peer-id:
 	cd $(BACKEND_DIR) && go run ./cmd/promise-peer identity -identity-file ../$(PEER_DIR)/identity.ed25519

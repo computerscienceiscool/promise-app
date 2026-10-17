@@ -62,3 +62,4 @@
 - [x] 060 - Add recipient QR generator
 - [ ] 061 - Allow private-LAN HTTP for the POC relay
 - [x] 062 - Add relay health QR probe
+- [x] 063 - Add USB relay bridge command
