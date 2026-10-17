@@ -3,7 +3,7 @@
 ANDROID_DIR := android
 APK := $(ANDROID_DIR)/app/build/outputs/apk/debug/app-debug.apk
 BACKEND_DIR := backend
-RELAY ?=
+RELAY ?= $(PROMISE_ADVERTISE_URL)
 DATA_DIR ?= .local/promise-relay
 PEER_DIR ?= .local/promise-peer
 
@@ -58,7 +58,7 @@ relay-preflight:
 	./scripts/preflight-lan-relay.sh -relay "$(RELAY)"
 
 relay:
-	@test -n "$(RELAY)" || (echo 'Set RELAY=http://LAN-IP:8080' >&2; exit 2)
+	@test -n "$(RELAY)" || (echo 'Set RELAY=http://LAN-IP:8080 or PROMISE_ADVERTISE_URL=http://LAN-IP:8080' >&2; exit 2)
 	@test -n "$(PROMISE_ADMIN_TOKEN)" || (echo 'Set PROMISE_ADMIN_TOKEN to a fresh secret' >&2; exit 2)
 	PROMISE_ADVERTISE_URL="$(RELAY)" PROMISE_DATA_DIR="$(DATA_DIR)" ./scripts/start-lan-relay.sh
 
