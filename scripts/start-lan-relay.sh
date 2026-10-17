@@ -61,8 +61,8 @@ case "$PROMISE_ADVERTISE_URL" in
 esac
 
 case "$PROMISE_ADVERTISE_URL" in
-  *127.0.0.1*|*localhost*)
-    printf '%s\n' 'PROMISE_ADVERTISE_URL must name the host LAN address, not localhost.' >&2
+  *127.0.0.1*|*localhost*|*0.0.0.0*|*YOUR-LAN-IP*)
+    printf '%s\n' 'PROMISE_ADVERTISE_URL must name the actual host LAN address, not a loopback, wildcard, or placeholder.' >&2
     exit 2
     ;;
 esac

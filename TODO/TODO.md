@@ -55,3 +55,4 @@
 - [ ] 053 - Record audit evidence for the phone-computer demo
 - [ ] 054 - Validate the phone-computer host setup
 - [x] 055 - Add common Make commands
+- [x] 056 - Reject placeholder relay URLs

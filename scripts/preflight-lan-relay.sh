@@ -36,8 +36,8 @@ case "$relay" in
   *) printf '%s\n' 'Relay URL must begin with http:// for this POC relay.' >&2; exit 2 ;;
 esac
 case "$relay" in
-  *localhost*|*127.0.0.1*|*0.0.0.0*)
-    printf '%s\n' 'Relay URL must name this computer’s LAN address, not a loopback/wildcard address.' >&2
+  *localhost*|*127.0.0.1*|*0.0.0.0*|*YOUR-LAN-IP*)
+    printf '%s\n' 'Relay URL must name this computer’s actual LAN address, not a loopback, wildcard, or placeholder.' >&2
     exit 2
     ;;
 esac
