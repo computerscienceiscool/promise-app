@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
-    <application android:allowBackup="false" android:label="Promise App" android:theme="@style/Theme.PromiseApp">
+    <!-- The POC relay is deliberately private-LAN HTTP for an inspectable demo.
+         A production relay must use HTTPS and remove this exception. -->
+    <application android:allowBackup="false" android:label="Promise App" android:theme="@style/Theme.PromiseApp" android:usesCleartextTraffic="true">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
