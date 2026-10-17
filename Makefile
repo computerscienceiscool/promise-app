@@ -7,7 +7,7 @@ RELAY ?= $(PROMISE_ADVERTISE_URL)
 DATA_DIR ?= .local/promise-relay
 PEER_DIR ?= .local/promise-peer
 
-.PHONY: help test host-build apk install launch logcat diagnose-phone usb-relay usb-relay-clear peer-id peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence clean-apk
+.PHONY: help test host-build apk install launch logcat diagnose-phone usb-relay usb-relay-clear usb-relay-qr-open peer-id peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence clean-apk
 
 help:
 	@printf '%s\n' \
@@ -20,6 +20,7 @@ help:
 	  '  make logcat                       Show Promise App crash/error logs' \
 	  '  make diagnose-phone               Clear logs, launch app, then show crash/errors' \
 	  '  make usb-relay                    Route phone localhost:8080 to this computer over USB' \
+	  '  make usb-relay-qr-open             Show a QR code for the USB relay URL' \
 	  '  make usb-relay-clear              Remove the USB relay route' \
 	  '  make peer-id                      Print the persistent computer recipient CID' \
 	  '  make peer-qr                      Create a scannable PNG for the recipient CID' \
@@ -64,6 +65,10 @@ usb-relay:
 
 usb-relay-clear:
 	adb reverse --remove tcp:8080
+
+usb-relay-qr-open:
+	cd $(BACKEND_DIR) && go run ./cmd/promise-peer qr -content "http://127.0.0.1:8080" -out ../$(PEER_DIR)/usb-relay-qr.png
+	xdg-open $(PEER_DIR)/usb-relay-qr.png
 
 peer-id:
 	cd $(BACKEND_DIR) && go run ./cmd/promise-peer identity -identity-file ../$(PEER_DIR)/identity.ed25519

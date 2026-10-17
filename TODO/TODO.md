@@ -63,3 +63,4 @@
 - [ ] 061 - Allow private-LAN HTTP for the POC relay
 - [x] 062 - Add relay health QR probe
 - [x] 063 - Add USB relay bridge command
+- [ ] 064 - Add pasteable USB relay URL

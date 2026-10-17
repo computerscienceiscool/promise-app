@@ -51,6 +51,23 @@ class MainActivity : Activity() {
             hint = "Relay URL (for example http://192.168.1.10:8080)"
             setText(relayConfig.url); content.addView(this)
         }
+        button("Paste relay URL") {
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val pasted = clipboard.primaryClip
+                ?.takeIf { it.itemCount > 0 }
+                ?.getItemAt(0)
+                ?.coerceToText(this)
+                ?.toString()
+                ?.trim()
+            if (pasted.isNullOrBlank()) {
+                status.text = "Clipboard has no relay URL."
+            } else if (!pasted.startsWith("http://") && !pasted.startsWith("https://")) {
+                status.text = "Clipboard is not a relay URL."
+            } else {
+                relayURL.setText(pasted)
+                status.text = "Relay URL pasted. Tap Save relay."
+            }
+        }
         val recipient = EditText(this).apply {
             hint = "Recipient device identity CID"; content.addView(this)
         }
