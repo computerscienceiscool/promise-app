@@ -10,12 +10,8 @@ PEER_DIR ?= .local/promise-peer
 # where the default user cache is unavailable or read-only.
 GOCACHE ?= $(CURDIR)/.local/go-build-cache
 export GOCACHE
-ADB ?= adb
-# Pass DEVICE=<adb serial> to operate on one phone when more than one is
-# connected. Leave it empty to preserve normal single-device adb behavior.
-ADB_DEVICE = $(ADB) $(if $(DEVICE),-s $(DEVICE))
 
-.PHONY: help test host-build apk devices install launch logcat diagnose-phone pull-screenshot usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open demo-usb-setup demo-usb-verify duplicate-local require-admin-token peer-id peer-inbox-local peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence evidence-local clean-apk
+.PHONY: help test host-build apk install launch logcat diagnose-phone pull-screenshot usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open demo-usb-setup demo-usb-verify duplicate-local require-admin-token peer-id peer-inbox-local peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence evidence-local clean-apk
 
 help:
 	@printf '%s\n' \
@@ -23,13 +19,12 @@ help:
 	  '  make test                         Run backend, protocol, and peer tests' \
 	  '  make host-build                   Test host tools and build the debug APK' \
 	  '  make apk                          Build the Android debug APK' \
-	  '  make devices                      List Android devices visible to adb' \
-	  '  make install [DEVICE=serial]      Install the built APK on one Android device' \
-	  '  make launch [DEVICE=serial]       Start Promise App on one Android device' \
+	  '  make install                      Install the built APK using adb' \
+	  '  make launch                       Start Promise App on the connected phone' \
 	  '  make logcat                       Show Promise App crash/error logs' \
 	  '  make diagnose-phone               Clear logs, launch app, then show crash/errors' \
 	  '  make pull-screenshot              Pull the newest saved phone screenshot to .local/phone-screenshots/' \
-	  '  make usb-relay [DEVICE=serial]    Route one phone localhost:8080 to this computer over USB' \
+	  '  make usb-relay                    Route phone localhost:8080 to this computer over USB' \
 	  '  make usb-relay-status             Check the USB route and local relay health' \
 	  '  make usb-relay-qr-open             Show a QR code for the USB relay URL' \
 	  '  make demo-usb-setup                Prepare the connected phone and show its recipient QR' \
@@ -57,21 +52,18 @@ apk:
 	cd $(ANDROID_DIR) && ./gradlew :app:assembleDebug
 
 install: apk
-	$(ADB_DEVICE) install -r $(APK)
-
-devices:
-	$(ADB) devices
+	adb install -r $(APK)
 
 launch:
-	$(ADB_DEVICE) shell am start -n org.promisegrid.promiseapp/.MainActivity
+	adb shell am start -n org.promisegrid.promiseapp/.MainActivity
 
 logcat:
-	$(ADB_DEVICE) logcat -d -v brief -s AndroidRuntime:E ActivityTaskManager:E promisegrid:I '*:S'
+	adb logcat -d -v brief -s AndroidRuntime:E ActivityTaskManager:E promisegrid:I '*:S'
 
 diagnose-phone:
-	$(ADB_DEVICE) logcat -c
-	$(ADB_DEVICE) shell am force-stop org.promisegrid.promiseapp
-	$(ADB_DEVICE) shell am start -n org.promisegrid.promiseapp/.MainActivity
+	adb logcat -c
+	adb shell am force-stop org.promisegrid.promiseapp
+	adb shell am start -n org.promisegrid.promiseapp/.MainActivity
 	sleep 2
 	$(MAKE) logcat
 
@@ -79,29 +71,29 @@ diagnose-phone:
 # demo material and remains ignored with the rest of .local/.
 pull-screenshot:
 	@set -eu; \
-	$(ADB_DEVICE) get-state >/dev/null; \
-	source="$$($(ADB_DEVICE) shell 'for dir in /sdcard/Pictures/Screenshots /sdcard/DCIM/Screenshots /sdcard/Screenshots; do [ -d "$$dir" ] || continue; ls -t "$$dir"/*.[Pp][Nn][Gg] "$$dir"/*.[Jj][Pp][Gg] "$$dir"/*.[Jj][Pp][Ee][Gg] 2>/dev/null || true; done' | head -n 1 | tr -d '\r')"; \
+	adb get-state >/dev/null; \
+	source="$$(adb shell 'for dir in /sdcard/Pictures/Screenshots /sdcard/DCIM/Screenshots /sdcard/Screenshots; do [ -d "$$dir" ] || continue; ls -t "$$dir"/*.[Pp][Nn][Gg] "$$dir"/*.[Jj][Pp][Gg] "$$dir"/*.[Jj][Pp][Ee][Gg] 2>/dev/null || true; done' | head -n 1 | tr -d '\r')"; \
 	test -n "$$source" || { echo 'No PNG/JPG screenshot found in the standard Android screenshot folders.' >&2; exit 1; }; \
 	mkdir -p .local/phone-screenshots; \
 	destination=".local/phone-screenshots/$${source##*/}"; \
-	$(ADB_DEVICE) pull "$$source" "$$destination" >/dev/null; \
+	adb pull "$$source" "$$destination" >/dev/null; \
 	echo "Saved $$destination"
 
 # Developer/demo fallback when a Wi-Fi network isolates clients. Keep the
 # relay running on the computer, then point the phone app at
 # http://127.0.0.1:8080 after this command succeeds.
 usb-relay:
-	$(ADB_DEVICE) reverse tcp:8080 tcp:8080
+	adb reverse tcp:8080 tcp:8080
 	@echo 'USB relay is ready. In Promise App, set Relay URL to http://127.0.0.1:8080 and tap Save relay.'
 
 usb-relay-status:
-	$(ADB) devices
-	$(ADB_DEVICE) reverse --list
+	adb devices
+	adb reverse --list
 	curl --fail --silent --show-error http://127.0.0.1:8080/healthz
 	@echo
 
 usb-relay-clear:
-	$(ADB_DEVICE) reverse --remove tcp:8080
+	adb reverse --remove tcp:8080
 
 usb-relay-qr-open:
 	cd $(BACKEND_DIR) && go run ./cmd/promise-peer qr -content "http://127.0.0.1:8080" -out ../$(PEER_DIR)/usb-relay-qr.png
