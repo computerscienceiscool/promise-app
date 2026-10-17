@@ -61,23 +61,21 @@ object PromiseEnvelope {
     }
 
     fun rawEd25519(publicKey: PublicKey): ByteArray {
-        // Android Keystore providers legitimately emit either RFC 8410's
-        // parameter-free SPKI or a legacy SPKI with an explicit ASN.1 NULL
-        // parameter. Both carry the same Ed25519 OID and a 32-byte BIT STRING.
+        // Android Keystore providers can expose either the raw key or a
+        // provider-specific SubjectPublicKeyInfo wrapper. The POC needs the
+        // final 32-byte Ed25519 public key, not the wrapper's DER details.
         val encoded = publicKey.encoded
-        val oidAt = encoded.indexOf(ED25519_OID)
-        require(oidAt >= 0) { "unsupported Ed25519 public key encoding" }
-        var bitStringAt = oidAt + ED25519_OID.size
-        if (encoded.size >= bitStringAt + 2 && encoded[bitStringAt] == 0x05.toByte() && encoded[bitStringAt + 1] == 0x00.toByte()) {
-            bitStringAt += 2
+        if (encoded.size == 32) {
+            return encoded.copyOf()
         }
+        val bitStringAt = encoded.size - 35
         require(
-            encoded.size == bitStringAt + 35 &&
+            bitStringAt >= 0 &&
                 encoded[bitStringAt] == 0x03.toByte() &&
                 encoded[bitStringAt + 1] == 0x21.toByte() &&
                 encoded[bitStringAt + 2] == 0x00.toByte(),
         ) {
-            "unsupported Ed25519 public key encoding"
+            "unsupported Ed25519 public key encoding (${encoded.size} bytes)"
         }
         return encoded.copyOfRange(bitStringAt + 3, encoded.size)
     }
@@ -209,13 +207,4 @@ object PromiseEnvelope {
         return result.toByteArray()
     }
 
-    private val ED25519_OID = byteArrayOf(0x06, 0x03, 0x2b, 0x65, 0x70)
-
-    private fun ByteArray.indexOf(needle: ByteArray): Int {
-        if (needle.isEmpty() || needle.size > size) return -1
-        for (start in 0..size - needle.size) {
-            if (copyOfRange(start, start + needle.size).contentEquals(needle)) return start
-        }
-        return -1
-    }
 }
