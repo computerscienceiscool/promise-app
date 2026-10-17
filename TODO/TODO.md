@@ -68,3 +68,4 @@
 - [ ] 066 - Fix relay setting persistence and verification
 - [x] 067 - Add local computer peer inbox command
 - [x] 068 - Capture local phone-computer audit evidence
+- [x] 069 - Document Make-driven demo and troubleshooting

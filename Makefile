@@ -7,7 +7,7 @@ RELAY ?= $(PROMISE_ADVERTISE_URL)
 DATA_DIR ?= .local/promise-relay
 PEER_DIR ?= .local/promise-peer
 
-.PHONY: help test host-build apk install launch logcat diagnose-phone usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open peer-id peer-inbox-local peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence evidence-local clean-apk
+.PHONY: help test host-build apk install launch logcat diagnose-phone usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open demo-usb-setup demo-usb-verify peer-id peer-inbox-local peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence evidence-local clean-apk
 
 help:
 	@printf '%s\n' \
@@ -22,6 +22,8 @@ help:
 	  '  make usb-relay                    Route phone localhost:8080 to this computer over USB' \
 	  '  make usb-relay-status             Check the USB route and local relay health' \
 	  '  make usb-relay-qr-open             Show a QR code for the USB relay URL' \
+	  '  make demo-usb-setup                Prepare the connected phone and show its recipient QR' \
+	  '  make demo-usb-verify               Verify inbox and capture audit proof; requires token' \
 	  '  make usb-relay-clear              Remove the USB relay route' \
 	  '  make peer-id                      Print the persistent computer recipient CID' \
 	  '  make peer-inbox-local             Fetch and verify the computer peer inbox from this relay' \
@@ -78,6 +80,14 @@ usb-relay-clear:
 usb-relay-qr-open:
 	cd $(BACKEND_DIR) && go run ./cmd/promise-peer qr -content "http://127.0.0.1:8080" -out ../$(PEER_DIR)/usb-relay-qr.png
 	xdg-open $(PEER_DIR)/usb-relay-qr.png
+
+# Run after the relay is already listening and the current APK is installed.
+# This avoids Wi-Fi client-isolation issues by using the connected USB cable.
+demo-usb-setup: usb-relay usb-relay-status peer-qr-open
+
+# Run after the phone reports UPLOADED. The token remains an operator-held
+# input; this target never prints it.
+demo-usb-verify: peer-inbox-local evidence-local
 
 peer-id:
 	cd $(BACKEND_DIR) && go run ./cmd/promise-peer identity -identity-file ../$(PEER_DIR)/identity.ed25519
