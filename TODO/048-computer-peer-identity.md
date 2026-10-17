@@ -13,3 +13,6 @@ go run ./cmd/promise-peer identity \
 
 Record the CID, rerun the same command to confirm it is stable, then copy only
 that CID to the phone. Keep the `0600` private identity file on the computer.
+
+Completed 2026-10-17. The stable public CID was supplied to the phone by QR;
+the private identity remained local with mode `0600`.

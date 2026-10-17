@@ -43,15 +43,15 @@
 - [ ] 041 - Install the latest APK on both phones
 - [ ] 042 - Save the LAN relay URL on both phones
 - [ ] 043 - Copy recipient CID from the second phone
-- [ ] 044 - Send and upload the first signed promise
-- [ ] 045 - Fetch and inspect recipient inbox evidence
-- [ ] 046 - Use a computer as the recipient peer
+- [x] 044 - Send and upload the first signed promise
+- [x] 045 - Fetch and inspect recipient inbox evidence
+- [x] 046 - Use a computer as the recipient peer
 - [x] 047 - Build the computer peer CLI
-- [ ] 048 - Generate the computer peer identity and copy its CID
-- [ ] 049 - Start the relay for the phone-computer demo
-- [ ] 050 - Configure the phone with relay URL and computer CID
-- [ ] 051 - Send a phone promise to the computer peer
-- [ ] 052 - Fetch and verify the phone promise on the computer
+- [x] 048 - Generate the computer peer identity and copy its CID
+- [x] 049 - Start the relay for the phone-computer demo
+- [x] 050 - Configure the phone with relay URL and computer CID
+- [x] 051 - Send a phone promise to the computer peer
+- [x] 052 - Fetch and verify the phone promise on the computer
 - [ ] 053 - Record audit evidence for the phone-computer demo
 - [ ] 054 - Validate the phone-computer host setup
 - [x] 055 - Add common Make commands
