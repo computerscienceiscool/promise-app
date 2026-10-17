@@ -44,6 +44,7 @@ relay="${relay%/}"
   -relay "$relay" \
   -identity-file "$identity_file" \
   -inbox-dir "$inbox_dir" \
+  -expect-cid "$message_cid" \
   -evidence-file "$out_dir/computer-fetch.json") | tee "$out_dir/computer-fetch.ndjson"
 
 # The local checker binds immutable bytes, exactly-one mailbox entry, and
@@ -57,6 +58,6 @@ relay="${relay%/}"
 curl --fail --silent --show-error \
   -H "Authorization: Bearer $token" \
   "$relay/v1/admin/audit" > "$out_dir/relay-audit.json"
-chmod 600 "$out_dir"/*
+find "$out_dir" -maxdepth 1 -type f -exec chmod 600 {} +
 
 echo "Evidence retained in $out_dir"

@@ -9,6 +9,12 @@ go build ./cmd/promise-peer
 go test ./cmd/promise-peer
 ```
 
+Or run the combined host build from the project root:
+
+```sh
+./scripts/build-phone-computer-host.sh --offline
+```
+
 The build is complete only when both commands pass. The CLI is a local POC
 implementation; its signed-message verification follows the frozen POC
 protocol profile, while the desktop runtime and local files are implementation

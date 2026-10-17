@@ -44,7 +44,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: promise-peer identity [-identity-file path] | inbox -relay URL [-identity-file path] [-inbox-dir path] [-evidence-file path]")
+	fmt.Fprintln(os.Stderr, "usage: promise-peer identity [-identity-file path] | inbox -relay URL [-identity-file path] [-inbox-dir path] [-evidence-file path] [-expect-cid message-cid]")
 }
 
 func identityCommand(args []string) {
@@ -71,6 +71,7 @@ func inboxCommand(args []string) {
 	identityPath := fs.String("identity-file", defaultIdentityFile, "private identity file")
 	inboxDir := fs.String("inbox-dir", ".promise-peer/inbox", "directory to retain verified exact CBOR bytes")
 	evidenceFile := fs.String("evidence-file", "", "optional JSON report of this verified fetch (mode 0600)")
+	expectCID := fs.String("expect-cid", "", "require this exact verified message CID in the fetched mailbox")
 	_ = fs.Parse(args)
 	if *relay == "" {
 		fail(errors.New("-relay is required"))
@@ -82,6 +83,9 @@ func inboxCommand(args []string) {
 	items, err := fetchInbox(http.DefaultClient, strings.TrimRight(*relay, "/"), id, *inboxDir)
 	if err != nil {
 		fail(err)
+	}
+	if *expectCID != "" && !containsCID(items, *expectCID) {
+		fail(fmt.Errorf("expected message CID %q was not fetched and verified", *expectCID))
 	}
 	if *evidenceFile != "" {
 		cid, err := id.cid()
@@ -102,6 +106,15 @@ func inboxCommand(args []string) {
 		encoded, _ := json.Marshal(item)
 		fmt.Println(string(encoded))
 	}
+}
+
+func containsCID(items []displayMessage, expected string) bool {
+	for _, item := range items {
+		if item.CID == expected {
+			return true
+		}
+	}
+	return false
 }
 
 // fetchEvidence deliberately contains no private key or relay admin token. It

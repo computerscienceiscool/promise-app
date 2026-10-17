@@ -120,6 +120,16 @@ func TestWriteEvidenceIsPrivateAndContainsVerifiedMessage(t *testing.T) {
 	}
 }
 
+func TestContainsCID(t *testing.T) {
+	items := []displayMessage{{CID: "bafkfirst"}, {CID: "bafksecond"}}
+	if !containsCID(items, "bafksecond") {
+		t.Fatal("expected CID was not found")
+	}
+	if containsCID(items, "bafkmissing") {
+		t.Fatal("unexpected CID was found")
+	}
+}
+
 type roundTripFunc func(*http.Request) (*http.Response, error)
 
 func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }

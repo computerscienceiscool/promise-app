@@ -168,3 +168,6 @@ scripts/capture-phone-computer-evidence.sh \
 `proof-check.txt` proves retained bytes validate and have one recipient mailbox
 entry plus at least one upload and fetch audit event. The report does not prove
 acceptance, user intent, ordering, or that the audit log is tamper-evident.
+The capture command also fails unless the requested message CID is fetched and
+verified by the computer peer; it will not silently record unrelated mailbox
+messages as proof for this run.

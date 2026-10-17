@@ -24,6 +24,9 @@ Environment:
 
 The relay is for a trusted private LAN demonstration only. Do not expose its
 HTTP listener or data directory to the public Internet.
+
+Before supplying a token or starting a listener, run:
+  ./scripts/preflight-lan-relay.sh -relay http://192.168.1.10:8080
 EOF
 }
 
