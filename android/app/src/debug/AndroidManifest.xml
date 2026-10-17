@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      The device-relay demonstration intentionally uses a private-LAN HTTP URL.
+      This override applies only to debug APKs. Release builds continue to require
+      HTTPS, rather than silently allowing cleartext traffic.
+    -->
+    <application android:usesCleartextTraffic="true" />
+</manifest>

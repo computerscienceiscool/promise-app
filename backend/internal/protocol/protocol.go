@@ -16,12 +16,32 @@ import (
 )
 
 const (
-	GridTag                 = 1735551332
-	MaxEnvelopeBytes        = 128 * 1024
-	MaxBodyBytes            = 4096
-	maxInvocations          = 4
-	identityCodec    uint64 = 0x300001
+	GridTag          = 1735551332
+	MaxEnvelopeBytes = 128 * 1024
+	MaxBodyBytes     = 4096
+	// FrozenProtocolCIDText identifies the exact descriptor retained in
+	// backend/testdata/promise-messaging-v0-descriptor.json. It is the only
+	// protocol selector accepted by the POC relay.
+	FrozenProtocolCIDText        = "bafkreicutumpjz3skwoehjn3gptve5m3atgypmfbsdhbtapg2rcwt2c2hi"
+	maxInvocations               = 4
+	identityCodec         uint64 = 0x300001
 )
+
+// FrozenProtocolCID returns the version-zero protocol selector. The constant
+// is parsed at the boundary rather than exposing a mutable global CID value.
+func FrozenProtocolCID() cid.Cid {
+	value, err := cid.Parse(FrozenProtocolCIDText)
+	if err != nil {
+		panic("invalid frozen Promise Messaging v0 protocol CID: " + err.Error())
+	}
+	return value
+}
+
+// IsFrozenProtocol reports whether a candidate selects this POC's one frozen
+// protocol. Parsing and signature validation are intentionally separate from
+// local protocol support, so callers can retain unknown envelopes as opaque
+// bytes if their policy permits it.
+func IsFrozenProtocol(value cid.Cid) bool { return value.Equals(FrozenProtocolCID()) }
 
 var (
 	canonical cbor.EncMode
@@ -174,6 +194,9 @@ func Build(protocolID cid.Cid, privateKey ed25519.PrivateKey, payload Payload) (
 		return nil, cid.Undef, fmt.Errorf("protocol ID and private key are required")
 	}
 	public := privateKey.Public().(ed25519.PublicKey)
+	// A missing invokes field and an empty invokes array have different CBOR
+	// encodings. The v0 schema requires an array, including for offers.
+	payload.Invokes = append([]cbor.Tag{}, payload.Invokes...)
 	signer, err := IdentityCID(public)
 	if err != nil {
 		return nil, cid.Undef, err

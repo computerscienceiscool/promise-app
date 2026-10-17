@@ -17,8 +17,9 @@ object PromiseEnvelope {
     private const val SHA2_256 = 0x12L
     private const val MAX_BODY_BYTES = 4096
 
-    // POC protocol selector. This is the same temporary selector used by the relay tests.
-    val protocolCid: Cid = Cid.fromString("bafkreigh2akiscaildc5hiywzbllsgrcfqew2gozbkkfu4a2yv56zzrxmu")
+    // Frozen Promise Messaging v0 selector. It identifies the immutable
+    // descriptor in backend/testdata/promise-messaging-v0-descriptor.json.
+    val protocolCid: Cid = Cid.fromString("bafkreicutumpjz3skwoehjn3gptve5m3atgypmfbsdhbtapg2rcwt2c2hi")
 
     data class Signed(val bytes: ByteArray, val cid: Cid, val from: Cid, val to: Cid)
 

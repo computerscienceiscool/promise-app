@@ -1,6 +1,9 @@
-# Promise Messaging v0 test vectors
+# Promise Messaging v0 frozen artifacts
 
-TODO 002 owns fixed cross-language vectors. Before freezing the protocol, add
-the exact canonical envelope bytes, pCID, message CID, public key, signature,
-and expected rejection cases here. Android and backend tests must consume the
-same artifacts.
+`promise-messaging-v0-descriptor.json` is the exact byte sequence addressed by
+the v0 protocol CID. Do not reformat it; any byte change defines a new version.
+
+`promise-messaging-v0-vectors.json` contains public deterministic signing keys,
+exact canonical envelope bytes, message CIDs, and rejection cases. It is the
+shared Android/backend conformance input. The keys are test-only and never
+belong in a build or a device identity store.

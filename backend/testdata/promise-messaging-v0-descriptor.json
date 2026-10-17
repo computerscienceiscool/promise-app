@@ -1,0 +1,1 @@
+{"body_max_bytes":4096,"envelope":"grid-v0-three-slot","identity":"ed25519-device-v0","kinds":["promise_offer","promise_accept","promise_decline","observation"],"name":"promise-messaging","proof":"ed25519-projection-v0","version":0}

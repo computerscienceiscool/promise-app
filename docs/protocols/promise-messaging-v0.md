@@ -1,6 +1,7 @@
 # Promise Messaging v0
 
-Status: draft POC protocol; not a frozen PromiseGrid specification.
+Status: frozen POC profile. This is not a frozen universal PromiseGrid
+specification or SDK API.
 
 ## Purpose
 
@@ -10,10 +11,19 @@ chat, payment, authorization, or identity protocol.
 
 ## Protocol identity
 
-This document must be frozen as exact bytes before implementation claims a
-pCID. Until then, all v0 traffic is local test traffic and must not be called
-interoperable PromiseGrid traffic. The implementation records the final pCID
-in its configuration, test vectors, diagnostics, and conformance statement.
+The immutable v0 protocol descriptor is
+`backend/testdata/promise-messaging-v0-descriptor.json`, whose exact UTF-8
+bytes (including its final newline) have raw CIDv1 SHA-256:
+
+```text
+bafkreicutumpjz3skwoehjn3gptve5m3atgypmfbsdhbtapg2rcwt2c2hi
+```
+
+That CID is the sole v0 pCID selector accepted by this POC relay. The
+descriptor is an intentionally small freeze artifact: changing it is a new
+protocol version, not an edit to v0. The explanatory documents may be improved
+without changing the selector; the test vector test verifies the descriptor
+CID.
 
 ## Envelope
 
@@ -98,19 +108,21 @@ The backend may enforce byte-size limits, verify CIDs, and produce diagnostics.
 It stores and returns exact bytes. It does not rewrite messages, synthesize
 acceptance, infer promise completion, or turn a notification into evidence.
 
-## Required test vectors
+## Frozen test vectors
 
-- Canonical offer and acceptance examples with exact encoded bytes and CIDs.
-- Valid and invalid signing projections.
-- Invalid CIDs, duplicate keys, unknown fields, non-canonical CBOR, oversized
-  messages, incorrect pCID, altered bytes, duplicate invocations, and invalid
-  response correlation.
-- Idempotent backend upload/retrieval of one exact message CID.
+`backend/testdata/promise-messaging-v0-vectors.json` contains two deterministic
+Ed25519 examples: an offer and the recipient's acceptance. It fixes the key
+seeds, identities, payload fields, exact envelope bytes, and message CIDs.
+Those private test seeds are public fixtures and must never be used by an app.
 
-## Open before freeze
+The backend test suite verifies that each fixture is byte-for-byte reproducible
+and that altered bytes and an otherwise-valid unknown selector are rejected.
+The relay also proves idempotent exact-byte upload/retrieval in its API tests.
+Android conformance must consume these artifacts rather than duplicating their
+values in a separate test fixture.
 
-- Exact device-identity record and CID codec.
-- Envelope tag/encoding implementation and canonical-CBOR library profile.
-- Final body-size and whole-envelope limits.
-- Whether `observation` belongs in v0 or a separate protocol.
+## Still outside this POC
+
 - Key rotation, account recovery, and multi-device continuity.
+- User-level identity, trust policy, authorization, and privacy policy.
+- Production relay availability, anti-abuse controls, and data retention.

@@ -51,6 +51,10 @@ func (s *Server) upload(w http.ResponseWriter, r *http.Request) {
 		problem(w, http.StatusBadRequest, "invalid envelope: "+err.Error())
 		return
 	}
+	if !protocol.IsFrozenProtocol(candidate.Protocol) {
+		problem(w, http.StatusBadRequest, "unsupported protocol selector")
+		return
+	}
 	actor := r.Header.Get("X-Device-ID")
 	from, err := protocol.ParseCIDTag(candidate.Payload.From)
 	if err != nil || actor == "" || actor != from.String() {

@@ -11,8 +11,24 @@
 - [ ] 002 - Freeze and test the initial POC message protocol
 - [ ] 001 - Build the Android/Kindle PromiseGrid messaging POC
 - [x] 011 - Integrate Android message pipeline into the screen
-- [ ] 012 - Freeze protocol pCID and shared test vectors
-- [ ] 013 - Move Android private key into Android Keystore
+- [x] 012 - Freeze protocol pCID and shared test vectors
+- [x] 013 - Move Android private key into Android Keystore
 - [ ] 014 - Configure and run a reachable relay backend
 - [ ] 015 - Build and install the updated APK
 - [ ] 016 - Run two-device offline retry proof
+- [x] 017 - Integrate Android UI, protocol, and keystore changes
+- [x] 018 - Update Android envelope selector to frozen pCID
+- [ ] 019 - Build and install the integrated APK
+- [ ] 020 - Start a device-reachable relay instance
+- [ ] 021 - Prove two-device delivery and offline retry
+- [ ] 022 - Complete the demo runbook and close validated TODOs
+- [ ] 023 - Commit and push the integrated POC
+- [ ] 024 - Build the integrated debug APK on the host
+- [ ] 025 - Install the integrated APK on each test phone
+- [ ] 026 - Start the relay with persistent device-reachable storage
+- [ ] 027 - Configure both phones with the relay URL
+- [ ] 028 - Send and verify a first signed message
+- [ ] 029 - Prove duplicate delivery preserves one message CID
+- [ ] 030 - Prove offline retry preserves one message CID
+- [ ] 031 - Inspect relay audit evidence
+- [ ] 032 - Review evidence and mark validated TODOs done
