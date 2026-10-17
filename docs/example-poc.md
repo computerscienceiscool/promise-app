@@ -4,6 +4,8 @@ This record describes one completed local proof on 2026-10-17. It is evidence
 for the Android-to-computer POC, not a claim of universal PromiseGrid transport
 or a production deployment.
 
+![USB phone-to-computer message flow](images/usb-message-flow.svg)
+
 ## Claim proved
 
 An Android phone created one immutable, signed Promise Messaging v0 envelope,
