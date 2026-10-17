@@ -54,3 +54,4 @@
 - [ ] 052 - Fetch and verify the phone promise on the computer
 - [ ] 053 - Record audit evidence for the phone-computer demo
 - [ ] 054 - Validate the phone-computer host setup
+- [x] 055 - Add common Make commands
