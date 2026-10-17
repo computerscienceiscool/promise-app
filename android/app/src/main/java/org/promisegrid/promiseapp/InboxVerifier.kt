@@ -14,7 +14,17 @@ import java.security.Signature
 object InboxVerifier {
     private const val MAX_BODY = 4096
 
-    fun verify(expectedCid: String, bytes: ByteArray, inbox: InboxStore): InboxItem {
+    /**
+     * Verifies a retained envelope for this device only. A relay mailbox is
+     * merely an availability hint, so a valid envelope addressed elsewhere
+     * cannot become candidate evidence in this inbox.
+     */
+    fun verify(
+        expectedCid: String,
+        bytes: ByteArray,
+        inbox: InboxStore,
+        recipient: PromiseEnvelope.Cid,
+    ): InboxItem {
         fun fail(state: InboxState, detail: String): InboxItem = inbox.mark(expectedCid, state, detail)
         return try {
             if (bytes.isEmpty() || bytes.size > InboxStore.MAX_ENVELOPE_BYTES) return fail(InboxState.FORMAT_REJECTED, "Invalid envelope size")
@@ -38,6 +48,7 @@ object InboxVerifier {
             if (!signature.verify(proof.signature)) return fail(InboxState.SIGNATURE_REJECTED, "Ed25519 signature failed")
             val signer = PromiseEnvelope.identityCid(proof.publicKey)
             if (payload.from != signer || payload.from == payload.to) return fail(InboxState.IDENTITY_REJECTED, "Sender identity does not match signing key")
+            if (payload.to != recipient) return fail(InboxState.IDENTITY_REJECTED, "Envelope recipient does not match this device")
             inbox.mark(expectedCid, InboxState.CANDIDATE_EVIDENCE, "Verified canonical envelope and Ed25519 proof; local candidate only")
         } catch (e: Exception) {
             fail(InboxState.FORMAT_REJECTED, e.message ?: "Malformed envelope")

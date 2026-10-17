@@ -29,7 +29,12 @@ class InboxSync(
                         // A relay listing is only a hint.  The verifier owns every
                         // transition out of quarantine and re-computes the CID from
                         // the retained bytes before considering them evidence.
-                        InboxVerifier.verify(cid, bytes, inbox)
+                        InboxVerifier.verify(
+                            expectedCid = cid,
+                            bytes = bytes,
+                            inbox = inbox,
+                            recipient = PromiseEnvelope.Cid.fromString(relay.deviceID),
+                        )
                         fetched++
                     } catch (exception: Exception) {
                         failures += InboxFetchFailure(cid, exception.message ?: "Could not retain envelope")

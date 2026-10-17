@@ -9,6 +9,8 @@ Implemented quarantine foundation:
 - Private storage keeps the original bytes separately from local metadata.
 - Explicit local outcomes exist for malformed payloads/proofs, unknown
   protocols, identity failures, and `CANDIDATE_EVIDENCE`.
+- A valid envelope addressed to a different device is rejected as an identity
+  mismatch; a relay mailbox listing is only an availability hint.
 
 Implemented: `InboxVerifier` now strictly decodes the fixed envelope schema,
 checks canonical CBOR and the complete-envelope CID, validates the frozen

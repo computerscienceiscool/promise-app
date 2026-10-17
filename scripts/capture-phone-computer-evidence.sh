@@ -9,14 +9,21 @@ usage() {
   exit 2
 }
 
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+project_dir=$(CDPATH= cd -- "$script_dir/.." && pwd)
+
 relay=""
 token=""
 data_dir=""
 message_cid=""
 recipient=""
 out_dir=""
-identity_file=".promise-peer/identity.ed25519"
-inbox_dir=".promise-peer/inbox"
+# Keep the capture command on the same persistent peer identity that
+# prepare-phone-computer-demo.sh and validate-phone-computer-host.sh use.  The
+# peer command runs from backend/, so relative defaults here would otherwise
+# resolve to a different key and make the phone's recorded recipient CID fail.
+identity_file="$project_dir/.local/promise-peer/identity.ed25519"
+inbox_dir="$project_dir/.local/promise-peer/inbox"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -36,7 +43,7 @@ done
 mkdir -p "$out_dir"
 chmod 700 "$out_dir"
 
-backend_dir="$(cd "$(dirname "$0")/../backend" && pwd)"
+backend_dir="$project_dir/backend"
 relay="${relay%/}"
 
 # The peer independently fetches, validates and retains exact CBOR bytes.

@@ -5,7 +5,7 @@ import java.net.URL
 import java.nio.charset.StandardCharsets
 import org.json.JSONObject
 
-class RelayClient(private val relayURL: String, private val deviceID: String) {
+class RelayClient(private val relayURL: String, val deviceID: String) {
     fun upload(envelope: ByteArray): Result<String> = runCatching {
         require(relayURL.startsWith("http://") || relayURL.startsWith("https://")) {
             "Relay URL must start with http:// or https://"

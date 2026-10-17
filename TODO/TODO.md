@@ -6,9 +6,9 @@
 - [ ] 006 - Fetch recipient mailbox envelopes
 - [ ] 007 - Verify and quarantine incoming envelopes
 - [ ] 008 - Test two-device delivery
-- [ ] 009 - Write the demo runbook
+- [x] 009 - Write the demo runbook
 - [ ] 010 - Commit and push the completed POC
-- [ ] 002 - Freeze and test the initial POC message protocol
+- [x] 002 - Freeze and test the initial POC message protocol
 - [ ] 001 - Build the Android/Kindle PromiseGrid messaging POC
 - [x] 011 - Integrate Android message pipeline into the screen
 - [x] 012 - Freeze protocol pCID and shared test vectors
@@ -46,7 +46,7 @@
 - [ ] 044 - Send and upload the first signed promise
 - [ ] 045 - Fetch and inspect recipient inbox evidence
 - [ ] 046 - Use a computer as the recipient peer
-- [ ] 047 - Build the computer peer CLI
+- [x] 047 - Build the computer peer CLI
 - [ ] 048 - Generate the computer peer identity and copy its CID
 - [ ] 049 - Start the relay for the phone-computer demo
 - [ ] 050 - Configure the phone with relay URL and computer CID
