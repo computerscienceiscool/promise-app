@@ -121,6 +121,50 @@ immutable messages.
     Those local artifacts are intentionally not committed because they may
     contain environment-specific audit data.
 
+## Reviewer evidence chain
+
+This table separates each claim from the artifact that supports it. A reviewer
+does not need to trust the app screen alone or the relay alone.
+
+| Reviewer question | Direct evidence | What it establishes | What it does **not** establish |
+| --- | --- | --- | --- |
+| Was there a real connected phone? | The phone screenshot above shows the app, device identity, active USB relay, outbox, CID, and `UPLOADED` state. | A physical Android device retained an outbox record for the stated CID and recorded its upload state. | That the computer received or accepted the message. |
+| Was the intended recipient transferred without typing it? | The committed QR image encodes the stated computer recipient CID. | The phone could obtain the complete recipient identifier by scan/copy rather than transcription. | That the sender used any specific scanner implementation. |
+| Did the computer see the same message CID? | The `make peer-inbox-local` JSON reports the same CID as the phone outbox and names the expected sender and recipient. | The independent computer peer fetched a message addressed to its identity. | That any human accepted the promise. |
+| Did verification inspect bytes rather than a relay summary? | The peer result was produced after retrieval; its retained `.cbor` file is named by the CID. The evidence check reports `bytes=342`. | The verifier read retained envelope bytes, recomputed the CID, and applied this POC's format, pCID, signature, and recipient checks. | That a third party independently operated the relay. |
+| Was relay history checked? | `make evidence-local` reported `mailbox_entries=1 uploads=1 fetches=2` and retained an authenticated audit snapshot locally. | This relay recorded one mailbox entry, one upload, and two fetches for that CID at capture time. | Tamper-evident, globally witnessed audit history. |
+
+## Reproduce the proof
+
+A reviewer with the repository, Android SDK, Go 1.24+, a USB-debuggable phone,
+and an operator-held fresh relay token can rerun the same path without relying
+on the screenshots:
+
+```sh
+make install
+RELAY=http://YOUR-LAN-IP:8080 PROMISE_ADMIN_TOKEN='fresh-secret' make relay
+# Leave the relay running in this terminal.
+```
+
+In a second terminal, prepare the USB route and computer recipient QR:
+
+```sh
+make demo-usb-setup
+```
+
+On the phone, select **Use USB relay**, scan/copy the QR recipient CID, enter a
+test body, and select **Sign, queue, and upload**. After the app reports
+`UPLOADED`, run:
+
+```sh
+PROMISE_ADMIN_TOKEN='the-same-secret' make demo-usb-verify
+```
+
+The command fails rather than passing if the inbox does not contain exactly
+one verified CBOR envelope or if the local evidence check cannot match it to
+relay storage and audit records. This is reproducible POC evidence, not an
+external certification.
+
 ## What the proof means
 
 The computer did not trust a relay JSON summary as the message. It retrieved
