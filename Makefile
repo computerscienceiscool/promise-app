@@ -7,7 +7,7 @@ RELAY ?= $(PROMISE_ADVERTISE_URL)
 DATA_DIR ?= .local/promise-relay
 PEER_DIR ?= .local/promise-peer
 
-.PHONY: help test host-build apk install launch logcat diagnose-phone usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open peer-id peer-inbox-local peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence clean-apk
+.PHONY: help test host-build apk install launch logcat diagnose-phone usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open peer-id peer-inbox-local peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence evidence-local clean-apk
 
 help:
 	@printf '%s\n' \
@@ -31,7 +31,8 @@ help:
 	  '  make relay-preflight RELAY=URL    Validate a planned LAN relay URL' \
 	  '  make relay RELAY=URL               Start relay; requires PROMISE_ADMIN_TOKEN' \
 	  '  make validate APK=PATH             Validate host tools and an APK' \
-	  '  make evidence RELAY=URL CID=CID    Capture proof; also requires token/data/recipient/out-dir'
+	  '  make evidence RELAY=URL CID=CID    Capture proof; also requires token/data/recipient/out-dir' \
+	  '  make evidence-local                Capture audit proof for the one verified local inbox message'
 
 test:
 	cd $(BACKEND_DIR) && go test ./...
@@ -111,6 +112,10 @@ validate:
 evidence:
 	@test -n "$(RELAY)" && test -n "$(CID)" && test -n "$(RECIPIENT)" && test -n "$(OUT_DIR)" && test -n "$(PROMISE_ADMIN_TOKEN)" || (echo 'Set RELAY, CID, RECIPIENT, OUT_DIR, and PROMISE_ADMIN_TOKEN' >&2; exit 2)
 	./scripts/capture-phone-computer-evidence.sh -relay "$(RELAY)" -token "$(PROMISE_ADMIN_TOKEN)" -data-dir "$(DATA_DIR)" -cid "$(CID)" -recipient "$(RECIPIENT)" -out-dir "$(OUT_DIR)"
+
+evidence-local:
+	@test -n "$(PROMISE_ADMIN_TOKEN)" || (echo 'Set PROMISE_ADMIN_TOKEN to the relay token' >&2; exit 2)
+	@set -eu; set -- $$(find $(PEER_DIR)/inbox -maxdepth 1 -type f -name '*.cbor' -print); test "$$#" -eq 1 || { echo 'Expected exactly one verified CBOR file in $(PEER_DIR)/inbox; use make evidence with explicit CID instead.' >&2; exit 2; }; message_file="$$1"; cid="$${message_file##*/}"; cid="$${cid%.cbor}"; recipient="$$(cd $(BACKEND_DIR) && go run ./cmd/promise-peer identity -identity-file ../$(PEER_DIR)/identity.ed25519)"; ./scripts/capture-phone-computer-evidence.sh -relay http://127.0.0.1:8080 -token "$(PROMISE_ADMIN_TOKEN)" -data-dir .local/promise-relay -cid "$$cid" -recipient "$$recipient" -out-dir .local/promise-evidence/"$$cid"
 
 clean-apk:
 	rm -f $(APK)

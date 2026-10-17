@@ -67,3 +67,4 @@
 - [x] 065 - Add USB relay status check
 - [ ] 066 - Fix relay setting persistence and verification
 - [x] 067 - Add local computer peer inbox command
+- [ ] 068 - Capture local phone-computer audit evidence
