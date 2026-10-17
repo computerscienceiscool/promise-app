@@ -159,6 +159,7 @@ Do not commit private keys, relay tokens, or local evidence.
 
 - [Phone/computer demo](docs/phone-computer-demo.md)
 - [Completed phone-to-computer POC example](docs/example-poc.md)
+- [Amazon Fire / Kindle installation](docs/kindle.md)
 - [Device relay setup](docs/device-relay-setup.md)
 - [Proof runbook](docs/poc-proof-runbook.md)
 - [Troubleshooting](docs/troubleshooting.md)
