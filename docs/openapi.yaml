@@ -1,0 +1,62 @@
+openapi: 3.1.0
+info:
+  title: Promise App POC relay
+  version: 0.1.0
+  description: Exact-byte storage and delivery for signed Promise Messaging v0 envelopes.
+paths:
+  /healthz:
+    get:
+      responses:
+        '200': {description: Relay is live}
+  /v1/envelopes:
+    post:
+      parameters:
+        - $ref: '#/components/parameters/DeviceID'
+      requestBody:
+        required: true
+        content:
+          application/cbor:
+            schema: {type: string, format: binary}
+      responses:
+        '201': {description: Immutable envelope retained and recipient mailbox updated}
+        '400': {description: Invalid envelope}
+        '401': {description: Sender identity mismatch}
+  /v1/mailbox:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/DeviceID'
+      responses:
+        '200': {description: Available immutable message IDs}
+        '401': {description: Missing device identity}
+  /v1/envelopes/{cid}:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/DeviceID'
+        - name: cid
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        '200':
+          description: Original envelope bytes
+          content:
+            application/cbor:
+              schema: {type: string, format: binary}
+        '403': {description: Envelope is not in the caller mailbox}
+  /v1/admin/audit:
+    get:
+      security: [{AdminBearer: []}]
+      responses:
+        '200': {description: Append-only POC audit events}
+components:
+  parameters:
+    DeviceID:
+      name: X-Device-ID
+      in: header
+      required: true
+      schema: {type: string}
+      description: CIDv1 public device identity.
+  securitySchemes:
+    AdminBearer:
+      type: http
+      scheme: bearer
