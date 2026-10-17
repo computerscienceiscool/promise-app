@@ -37,3 +37,15 @@ Could not determine a usable wildcard IP for this machine.
 This is an execution-environment restriction, not an APK compilation result.
 Run the host command above (outside the sandbox) to complete TODO 024 and retain
 its successful output.
+
+## Completion record — 2026-10-17
+
+The authorized host terminal built the latest source and installed the produced
+debug APK on the connected phone:
+
+```text
+BUILD SUCCESSFUL in 7s
+35 actionable tasks: 4 executed, 31 up-to-date
+Performing Streamed Install
+Success
+```

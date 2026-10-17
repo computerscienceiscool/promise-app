@@ -14,16 +14,16 @@
 - [x] 012 - Freeze protocol pCID and shared test vectors
 - [x] 013 - Move Android private key into Android Keystore
 - [ ] 014 - Configure and run a reachable relay backend
-- [ ] 015 - Build and install the updated APK
+- [x] 015 - Build and install the updated APK
 - [ ] 016 - Run two-device offline retry proof
 - [x] 017 - Integrate Android UI, protocol, and keystore changes
 - [x] 018 - Update Android envelope selector to frozen pCID
-- [ ] 019 - Build and install the integrated APK
+- [x] 019 - Build and install the integrated APK
 - [ ] 020 - Start a device-reachable relay instance
 - [ ] 021 - Prove two-device delivery and offline retry
 - [ ] 022 - Complete the demo runbook and close validated TODOs
 - [ ] 023 - Commit and push the integrated POC
-- [ ] 024 - Build the integrated debug APK on the host
+- [x] 024 - Build the integrated debug APK on the host
 - [ ] 025 - Install the integrated APK on each test phone
 - [ ] 026 - Start the relay with persistent device-reachable storage
 - [ ] 027 - Configure both phones with the relay URL
@@ -39,7 +39,7 @@
 - [ ] 037 - Send a signed promise to the second phone
 - [ ] 038 - Refresh and inspect the second phone inbox
 - [ ] 039 - Launch the LAN relay with the demo token
-- [ ] 040 - Build the latest APK outside the sandbox
+- [x] 040 - Build the latest APK outside the sandbox
 - [ ] 041 - Install the latest APK on both phones
 - [ ] 042 - Save the LAN relay URL on both phones
 - [ ] 043 - Copy recipient CID from the second phone
