@@ -18,3 +18,10 @@ Endpoints:
 The filesystem data directory deliberately exposes immutable object bytes,
 mailbox metadata, and append-only NDJSON audit events for POC review. It is not
 a production deployment topology.
+
+To run the same relay as a container:
+
+```sh
+docker build -t promise-relay .
+docker run --rm -p 8080:8080 -e PROMISE_ADMIN_TOKEN=local-demo -v promise-data:/data promise-relay
+```
