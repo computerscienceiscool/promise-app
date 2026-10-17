@@ -7,7 +7,7 @@ RELAY ?=
 DATA_DIR ?= .local/promise-relay
 PEER_DIR ?= .local/promise-peer
 
-.PHONY: help test host-build apk install peer-id relay-preflight relay validate evidence clean-apk
+.PHONY: help test host-build apk install launch logcat diagnose-phone peer-id relay-preflight relay validate evidence clean-apk
 
 help:
 	@printf '%s\n' \
@@ -16,6 +16,9 @@ help:
 	  '  make host-build                   Test host tools and build the debug APK' \
 	  '  make apk                          Build the Android debug APK' \
 	  '  make install                      Install the built APK using adb' \
+	  '  make launch                       Start Promise App on the connected phone' \
+	  '  make logcat                       Show Promise App crash/error logs' \
+	  '  make diagnose-phone               Clear logs, launch app, then show crash/errors' \
 	  '  make peer-id                      Print the persistent computer recipient CID' \
 	  '  make relay-preflight RELAY=URL    Validate a planned LAN relay URL' \
 	  '  make relay RELAY=URL               Start relay; requires PROMISE_ADMIN_TOKEN' \
@@ -33,6 +36,19 @@ apk:
 
 install: apk
 	adb install -r $(APK)
+
+launch:
+	adb shell am start -n org.promisegrid.promiseapp/.MainActivity
+
+logcat:
+	adb logcat -d -v brief -s AndroidRuntime:E ActivityTaskManager:E promisegrid:I '*:S'
+
+diagnose-phone:
+	adb logcat -c
+	adb shell am force-stop org.promisegrid.promiseapp
+	adb shell am start -n org.promisegrid.promiseapp/.MainActivity
+	sleep 2
+	$(MAKE) logcat
 
 peer-id:
 	cd $(BACKEND_DIR) && go run ./cmd/promise-peer identity -identity-file ../$(PEER_DIR)/identity.ed25519

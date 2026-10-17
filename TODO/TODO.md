@@ -56,3 +56,4 @@
 - [ ] 054 - Validate the phone-computer host setup
 - [x] 055 - Add common Make commands
 - [x] 056 - Reject placeholder relay URLs
+- [x] 057 - Add phone launch and diagnostic commands
