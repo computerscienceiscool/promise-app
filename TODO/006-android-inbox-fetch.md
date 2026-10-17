@@ -12,5 +12,13 @@ Implementation:
 - `InboxStore` records relay source and retrieval time and stores the exact
   bytes in Android private storage.
 
-Remaining integration: expose `InboxSync.sync()` through the activity after
-the device-identity CID is wired into the relay client.
+Integration completed:
+
+- **Refresh inbox** in `MainActivity` invokes `InboxSync.sync()` using the
+  persisted relay URL and the Android device identity.
+- The result reports fetched, already-retained, and failed counts before the
+  local inbox list refreshes.
+
+Status: implementation is complete. A physical recipient-phone inbox run is
+still pending under TODO 008; the completed phone-to-computer proof does not
+claim that Android recipient-device test.

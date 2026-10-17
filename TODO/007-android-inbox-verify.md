@@ -19,5 +19,7 @@ sender identity from the verified public key. Only then does it transition to
 `CANDIDATE_EVIDENCE`; all other outcomes remain explicit local rejection
 states.
 
-Verification needs an Android host build/device test before this TODO can be
-checked off. The sandbox cannot start Gradle's native Linux platform library.
+The Android project now builds and installs on the host and the sender screen
+has launched on the physical phone. The remaining proof is an inbound Android
+recipient-device run that exercises these verification states; that belongs to
+TODO 008. This TODO remains open until that run is retained as evidence.
