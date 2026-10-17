@@ -7,7 +7,7 @@ RELAY ?= $(PROMISE_ADVERTISE_URL)
 DATA_DIR ?= .local/promise-relay
 PEER_DIR ?= .local/promise-peer
 
-.PHONY: help test host-build apk install launch logcat diagnose-phone usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open demo-usb-setup demo-usb-verify peer-id peer-inbox-local peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence evidence-local clean-apk
+.PHONY: help test host-build apk install launch logcat diagnose-phone pull-screenshot usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open demo-usb-setup demo-usb-verify peer-id peer-inbox-local peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence evidence-local clean-apk
 
 help:
 	@printf '%s\n' \
@@ -19,6 +19,7 @@ help:
 	  '  make launch                       Start Promise App on the connected phone' \
 	  '  make logcat                       Show Promise App crash/error logs' \
 	  '  make diagnose-phone               Clear logs, launch app, then show crash/errors' \
+	  '  make pull-screenshot              Pull the newest saved phone screenshot to .local/phone-screenshots/' \
 	  '  make usb-relay                    Route phone localhost:8080 to this computer over USB' \
 	  '  make usb-relay-status             Check the USB route and local relay health' \
 	  '  make usb-relay-qr-open             Show a QR code for the USB relay URL' \
@@ -60,6 +61,18 @@ diagnose-phone:
 	adb shell am start -n org.promisegrid.promiseapp/.MainActivity
 	sleep 2
 	$(MAKE) logcat
+
+# Copies the most recent screenshot saved by Android. The destination is local
+# demo material and remains ignored with the rest of .local/.
+pull-screenshot:
+	@set -eu; \
+	adb get-state >/dev/null; \
+	source="$$(adb shell 'for dir in /sdcard/Pictures/Screenshots /sdcard/DCIM/Screenshots /sdcard/Screenshots; do [ -d "$$dir" ] || continue; ls -t "$$dir"/*.[Pp][Nn][Gg] "$$dir"/*.[Jj][Pp][Gg] "$$dir"/*.[Jj][Pp][Ee][Gg] 2>/dev/null || true; done' | head -n 1 | tr -d '\r')"; \
+	test -n "$$source" || { echo 'No PNG/JPG screenshot found in the standard Android screenshot folders.' >&2; exit 1; }; \
+	mkdir -p .local/phone-screenshots; \
+	destination=".local/phone-screenshots/$${source##*/}"; \
+	adb pull "$$source" "$$destination" >/dev/null; \
+	echo "Saved $$destination"
 
 # Developer/demo fallback when a Wi-Fi network isolates clients. Keep the
 # relay running on the computer, then point the phone app at

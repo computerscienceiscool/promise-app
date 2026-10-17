@@ -33,6 +33,63 @@ See [the protocol contract](docs/protocols/promise-messaging-v0.md).
 It does not claim a global identity registry, universal transport, recipient
 acceptance, production TLS, or a completed two-phone/Kindle proof.
 
+## Requirements
+
+The POC is developed and tested on Linux. To build the Android app, run the
+relay, and perform the connected-phone demonstration, install:
+
+- Git and GNU Make.
+- Go **1.24 or newer** for the relay, protocol tests, QR helper, and computer
+  peer.
+- JDK **17** for the included Gradle wrapper.
+- Android SDK Platform **36**, Build Tools, and Android platform tools
+  (`adb`). The app supports Android **8.0 / API 26** and newer.
+- A USB data cable and an Android device with Developer options and USB
+  debugging enabled. Accept the computer's RSA debugging prompt on the phone.
+- `curl` for relay-health checks. A desktop opener such as `xdg-open` is
+  optional, but used by the QR-opening commands.
+
+The first Gradle build may download its dependencies unless they are already
+cached. The USB demonstration does not need the phone and computer to reach
+each other over Wi-Fi.
+
+## Install
+
+Clone the repository and enter it:
+
+```sh
+git clone https://github.com/computerscienceiscool/promise-app.git
+cd promise-app
+```
+
+Point Gradle at the installed Android SDK. Change the path if your SDK is in a
+different location:
+
+```sh
+printf 'sdk.dir=%s\n' "$HOME/Android/Sdk" > android/local.properties
+```
+
+Connect and authorize the phone. This must show `device`, not `unauthorized`:
+
+```sh
+adb start-server
+adb devices
+```
+
+Build, install, and start the app:
+
+```sh
+make install
+make launch
+```
+
+To copy the newest screenshot already saved on the connected phone into
+`.local/phone-screenshots/`, run `make pull-screenshot`.
+
+If the app does not open, run `make diagnose-phone`. It starts the app and
+prints only the relevant crash/error log. See [Troubleshooting](docs/troubleshooting.md)
+for the common USB, SDK, and relay cases.
+
 ## Fast connected-phone demo
 
 Keep the relay terminal open until the demo ends.
@@ -101,6 +158,7 @@ Run `make help`. The primary commands are:
 Do not commit private keys, relay tokens, or local evidence.
 
 - [Phone/computer demo](docs/phone-computer-demo.md)
+- [Completed phone-to-computer POC example](docs/example-poc.md)
 - [Device relay setup](docs/device-relay-setup.md)
 - [Proof runbook](docs/poc-proof-runbook.md)
 - [Troubleshooting](docs/troubleshooting.md)
