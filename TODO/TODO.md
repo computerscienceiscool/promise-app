@@ -10,3 +10,9 @@
 - [ ] 010 - Commit and push the completed POC
 - [ ] 002 - Freeze and test the initial POC message protocol
 - [ ] 001 - Build the Android/Kindle PromiseGrid messaging POC
+- [x] 011 - Integrate Android message pipeline into the screen
+- [ ] 012 - Freeze protocol pCID and shared test vectors
+- [ ] 013 - Move Android private key into Android Keystore
+- [ ] 014 - Configure and run a reachable relay backend
+- [ ] 015 - Build and install the updated APK
+- [ ] 016 - Run two-device offline retry proof
