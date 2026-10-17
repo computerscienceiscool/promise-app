@@ -51,6 +51,17 @@ class MainActivity : Activity() {
             hint = "Relay URL (for example http://192.168.1.10:8080)"
             setText(relayConfig.url); content.addView(this)
         }
+        val activeRelay = label("Active relay: ${relayConfig.url.ifBlank { "not saved" }}", 12f)
+        fun saveRelay(url: String) {
+            val trimmed = url.trim()
+            relayURL.setText(trimmed)
+            relayConfig.url = trimmed
+            activeRelay.text = "Active relay: ${trimmed.ifBlank { "not saved" }}"
+            status.text = if (trimmed.isBlank()) "Relay URL cleared." else "Relay saved: $trimmed"
+        }
+        button("Use USB relay") {
+            saveRelay("http://127.0.0.1:8080")
+        }
         button("Paste relay URL") {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             val pasted = clipboard.primaryClip
@@ -64,8 +75,7 @@ class MainActivity : Activity() {
             } else if (!pasted.startsWith("http://") && !pasted.startsWith("https://")) {
                 status.text = "Clipboard is not a relay URL."
             } else {
-                relayURL.setText(pasted)
-                status.text = "Relay URL pasted. Tap Save relay."
+                saveRelay(pasted)
             }
         }
         val recipient = EditText(this).apply {
@@ -106,8 +116,7 @@ class MainActivity : Activity() {
         }
 
         button("Save relay") {
-            relayConfig.url = relayURL.text.toString()
-            status.text = if (relayConfig.url.isBlank()) "Relay URL cleared." else "Relay saved."
+            saveRelay(relayURL.text.toString())
         }
         button("Sign, queue, and upload") {
             try {
