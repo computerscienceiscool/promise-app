@@ -5,7 +5,7 @@
 - [x] 005 - Add Android retry and error states
 - [ ] 006 - Fetch recipient mailbox envelopes
 - [ ] 007 - Verify and quarantine incoming envelopes
-- [ ] 008 - Test two-device delivery
+- [x] 008 - Test two-device delivery
 - [x] 009 - Write the demo runbook
 - [x] 010 - Commit and push the completed POC
 - [x] 002 - Freeze and test the initial POC message protocol
