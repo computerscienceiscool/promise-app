@@ -5,9 +5,9 @@
 - [x] 005 - Add Android retry and error states
 - [ ] 006 - Fetch recipient mailbox envelopes
 - [ ] 007 - Verify and quarantine incoming envelopes
-- [ ] 008 - Test two-device delivery
+- [x] 008 - Test two-device delivery
 - [x] 009 - Write the demo runbook
-- [ ] 010 - Commit and push the completed POC
+- [x] 010 - Commit and push the completed POC
 - [x] 002 - Freeze and test the initial POC message protocol
 - [ ] 001 - Build the Android/Kindle PromiseGrid messaging POC
 - [x] 011 - Integrate Android message pipeline into the screen
@@ -22,7 +22,7 @@
 - [ ] 020 - Start a device-reachable relay instance
 - [ ] 021 - Prove two-device delivery and offline retry
 - [ ] 022 - Complete the demo runbook and close validated TODOs
-- [ ] 023 - Commit and push the integrated POC
+- [x] 023 - Commit and push the integrated POC
 - [x] 024 - Build the integrated debug APK on the host
 - [ ] 025 - Install the integrated APK on each test phone
 - [ ] 026 - Start the relay with persistent device-reachable storage
@@ -63,7 +63,7 @@
 - [x] 061 - Allow private-LAN HTTP for the POC relay
 - [x] 062 - Add relay health QR probe
 - [x] 063 - Add USB relay bridge command
-- [ ] 064 - Add pasteable USB relay URL
+- [x] 064 - Add pasteable USB relay URL
 - [x] 065 - Add USB relay status check
 - [x] 066 - Fix relay setting persistence and verification
 - [x] 067 - Add local computer peer inbox command

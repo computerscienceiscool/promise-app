@@ -6,6 +6,10 @@ BACKEND_DIR := backend
 RELAY ?= $(PROMISE_ADVERTISE_URL)
 DATA_DIR ?= .local/promise-relay
 PEER_DIR ?= .local/promise-peer
+# Keep Go build artifacts inside the project so Make commands work on hosts
+# where the default user cache is unavailable or read-only.
+GOCACHE ?= $(CURDIR)/.local/go-build-cache
+export GOCACHE
 
 .PHONY: help test host-build apk install launch logcat diagnose-phone pull-screenshot usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open demo-usb-setup demo-usb-verify duplicate-local require-admin-token peer-id peer-inbox-local peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence evidence-local clean-apk
 

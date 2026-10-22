@@ -49,6 +49,39 @@ func TestUploadMailboxAndExactRetrieval(t *testing.T) {
 	if response.Code != http.StatusCreated {
 		t.Fatalf("upload: %d %s", response.Code, response.Body.String())
 	}
+	var firstUpload struct {
+		CID          string `json:"cid"`
+		Created      bool   `json:"created"`
+		MailboxAdded bool   `json:"mailbox_added"`
+	}
+	if err := json.Unmarshal(response.Body.Bytes(), &firstUpload); err != nil {
+		t.Fatalf("decode first upload: %v", err)
+	}
+	if firstUpload.CID != messageID.String() || !firstUpload.Created || !firstUpload.MailboxAdded {
+		t.Fatalf("first upload result = %#v", firstUpload)
+	}
+
+	// A retry must preserve the exact immutable object and the recipient's one
+	// mailbox reference. This is the host-side counterpart to the physical
+	// offline-retry and duplicate-delivery demonstrations.
+	retry := httptest.NewRequest(http.MethodPost, "/v1/envelopes", bytes.NewReader(encoded))
+	retry.Header.Set("X-Device-ID", from.String())
+	response = httptest.NewRecorder()
+	handler.ServeHTTP(response, retry)
+	if response.Code != http.StatusCreated {
+		t.Fatalf("retry upload: %d %s", response.Code, response.Body.String())
+	}
+	var retryUpload struct {
+		CID          string `json:"cid"`
+		Created      bool   `json:"created"`
+		MailboxAdded bool   `json:"mailbox_added"`
+	}
+	if err := json.Unmarshal(response.Body.Bytes(), &retryUpload); err != nil {
+		t.Fatalf("decode retry upload: %v", err)
+	}
+	if retryUpload.CID != messageID.String() || retryUpload.Created || retryUpload.MailboxAdded {
+		t.Fatalf("retry upload result = %#v", retryUpload)
+	}
 
 	mailbox := httptest.NewRequest(http.MethodGet, "/v1/mailbox", nil)
 	mailbox.Header.Set("X-Device-ID", to.String())
