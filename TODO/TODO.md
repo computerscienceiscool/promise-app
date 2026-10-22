@@ -65,7 +65,7 @@
 - [x] 063 - Add USB relay bridge command
 - [ ] 064 - Add pasteable USB relay URL
 - [x] 065 - Add USB relay status check
-- [ ] 066 - Fix relay setting persistence and verification
+- [x] 066 - Fix relay setting persistence and verification
 - [x] 067 - Add local computer peer inbox command
 - [x] 068 - Capture local phone-computer audit evidence
 - [x] 069 - Document Make-driven demo and troubleshooting
