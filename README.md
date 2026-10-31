@@ -22,6 +22,26 @@ than claiming it as a universal Grid rule.
 
 See [the protocol contract](docs/protocols/promise-messaging-v0.md).
 
+## Current POC state (2026-10-30)
+
+This repository is in a demonstrable POC state, not a production-ready state.
+
+- **Physically proven:** one Android phone uploaded a signed message through a
+  relay over direct private-hotspot Wi-Fi, and a separate computer recipient
+  independently verified the exact same message CID.
+- **Office-network status:** the office Wi-Fi path did not permit the phone to
+  reach the computer relay, despite both devices being on the same routed
+  subnet. The hotspot result isolates that as an office-network or host-policy
+  issue, not an app, envelope, relay, or recipient-verifier failure. See
+  [the office Wi-Fi blocker record](docs/office-wifi-demo-blocker.md).
+- **Prepared and tested, but not physically proven:** Phone A → reachable
+  relay → Phone B delivery over separate networks. The QR-card generator and
+  its automated tests are ready; the live two-phone proof remains
+  [TODO 071](TODO/071-phone-to-phone-internet-connectivity.md).
+- **Not claimed:** direct phone-to-phone networking, human acceptance of a
+  promise, production TLS/deployment security, key recovery, or Kindle
+  delivery.
+
 ## What a successful demo proves
 
 - Phone private signing material remains in Android Keystore.
