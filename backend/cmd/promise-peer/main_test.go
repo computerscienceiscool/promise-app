@@ -130,6 +130,13 @@ func TestContainsCID(t *testing.T) {
 	}
 }
 
+func TestRecipientVerificationResultNamesTheVerifiedCID(t *testing.T) {
+	const cid = "bafyverifiedmessage"
+	if got, want := recipientVerificationResult(cid), "RECIPIENT VERIFIED cid="+cid; got != want {
+		t.Fatalf("recipient verification result = %q, want %q", got, want)
+	}
+}
+
 type roundTripFunc func(*http.Request) (*http.Response, error)
 
 func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }

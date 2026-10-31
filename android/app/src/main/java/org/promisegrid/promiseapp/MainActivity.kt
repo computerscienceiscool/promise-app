@@ -11,6 +11,9 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import java.util.concurrent.Executors
 
 /** Native POC UI: it persists signed bytes before attempting network delivery. */
@@ -52,15 +55,41 @@ class MainActivity : Activity() {
             setText(relayConfig.url); content.addView(this)
         }
         val activeRelay = label("Active relay: ${relayConfig.url.ifBlank { "not saved" }}", 12f)
+        val relayCheck = label("Relay check: not checked", 12f)
         fun saveRelay(url: String) {
             val trimmed = url.trim()
             relayURL.setText(trimmed)
             relayConfig.url = trimmed
             activeRelay.text = "Active relay: ${trimmed.ifBlank { "not saved" }}"
+            relayCheck.text = "Relay check: not checked"
             status.text = if (trimmed.isBlank()) "Relay URL cleared." else "Relay saved: $trimmed"
         }
         button("Use USB relay") {
             saveRelay("http://127.0.0.1:8080")
+        }
+        label("Relay URL QR: configures how this phone reaches the relay. It is not a recipient identity.", 12f)
+        button("Scan relay URL QR") {
+            val scanner = GmsBarcodeScanning.getClient(
+                this,
+                GmsBarcodeScannerOptions.Builder()
+                    .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                    .enableAutoZoom()
+                    .build(),
+            )
+            scanner.startScan()
+                .addOnSuccessListener { barcode ->
+                    val scanned = barcode.rawValue?.trim()
+                    if (scanned.isNullOrBlank() ||
+                        (!scanned.startsWith("http://") && !scanned.startsWith("https://"))
+                    ) {
+                        status.text = "Scanned QR is not a relay URL."
+                    } else {
+                        saveRelay(scanned)
+                        status.text = "Relay URL scanned and saved. Tap Check relay."
+                    }
+                }
+                .addOnCanceledListener { status.text = "Relay QR scan canceled." }
+                .addOnFailureListener { error -> status.text = "Relay QR scan failed: ${error.message ?: "unknown error"}" }
         }
         button("Paste relay URL") {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -78,8 +107,51 @@ class MainActivity : Activity() {
                 saveRelay(pasted)
             }
         }
+        button("Check relay") {
+            val url = relayConfig.url
+            if (url.isBlank()) {
+                status.text = "Save a relay URL first."
+                return@button
+            }
+            relayCheck.text = "Relay check: checking…"
+            work.execute {
+                RelayClient(url, identity).health().fold(
+                    onSuccess = { runOnUiThread {
+                        relayCheck.text = DeliveryPresentation.relayReady()
+                        status.text = "Relay is reachable. You can send a message."
+                    } },
+                    onFailure = { error -> runOnUiThread {
+                        relayCheck.text = DeliveryPresentation.relayFailed()
+                        status.text = "Relay is not reachable: ${error.message ?: "unknown error"}"
+                    } },
+                )
+            }
+        }
         val recipient = EditText(this).apply {
             hint = "Recipient device identity CID"; content.addView(this)
+        }
+        label("Recipient identity QR: selects the intended recipient. It is not a relay URL.", 12f)
+        button("Scan recipient identity QR") {
+            val scanner = GmsBarcodeScanning.getClient(
+                this,
+                GmsBarcodeScannerOptions.Builder()
+                    .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                    .enableAutoZoom()
+                    .build(),
+            )
+            scanner.startScan()
+                .addOnSuccessListener { barcode ->
+                    val scanned = barcode.rawValue?.trim()
+                    val valid = scanned?.let { runCatching { PromiseEnvelope.Cid.fromString(it) }.isSuccess } == true
+                    if (!valid) {
+                        status.text = "Scanned QR is not a recipient device CID."
+                    } else {
+                        recipient.setText(scanned)
+                        status.text = "Recipient identity scanned."
+                    }
+                }
+                .addOnCanceledListener { status.text = "Recipient QR scan canceled." }
+                .addOnFailureListener { error -> status.text = "Recipient QR scan failed: ${error.message ?: "unknown error"}" }
         }
         button("Paste recipient identity") {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -94,6 +166,22 @@ class MainActivity : Activity() {
         }
         val message = EditText(this).apply {
             hint = "Write a promise"; minLines = 3; content.addView(this)
+        }
+        var latestMessageCID: String? = null
+        val messageCID = label("Message CID: none", 12f)
+        fun showMessageCID(cid: String?) {
+            latestMessageCID = cid
+            messageCID.text = "Message CID: ${cid ?: "none"}"
+        }
+        button("Copy message CID") {
+            val cid = latestMessageCID
+            if (cid == null) {
+                status.text = "No message CID is available yet."
+            } else {
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("Promise App message CID", cid))
+                status.text = "Message CID copied: $cid"
+            }
         }
         val outboxSummary = label("")
         val inboxSummary = label("")
@@ -128,11 +216,19 @@ class MainActivity : Activity() {
                 val item = outbox.enqueue(envelope.bytes, envelope.from.toString())
                 val messageCid = envelope.cid.toString()
                 message.setText("")
-                status.text = "Signed $messageCid; queued exact bytes. Uploading…"
+                showMessageCID(messageCid)
+                status.text = DeliveryPresentation.queued(messageCid)
                 refresh()
                 uploader.upload(item.id) { completed -> runOnUiThread {
-                    status.text = completed?.let { "Upload ${it.status}: $messageCid" }
-                        ?: "Upload did not find its outbox item."
+                    status.text = completed?.let {
+                        when (it.status) {
+                            DurableOutbox.Status.UPLOADED ->
+                                DeliveryPresentation.uploaded(messageCid)
+                            DurableOutbox.Status.RETRYABLE_FAILURE ->
+                                DeliveryPresentation.retryableFailure(messageCid)
+                            else -> "Upload ${it.status}: $messageCid"
+                        }
+                    } ?: "Upload did not find its phone outbox item."
                     refresh()
                 } }
             } catch (error: Exception) {
@@ -165,7 +261,15 @@ class MainActivity : Activity() {
             }
         }
         refresh()
-        setContentView(ScrollView(this).apply { addView(content) })
+        setContentView(ScrollView(this).apply {
+            addView(content)
+            clipToPadding = false
+            setOnApplyWindowInsetsListener { view, insets ->
+                view.setPadding(0, 0, 0, insets.systemWindowInsetBottom)
+                insets
+            }
+            requestApplyInsets()
+        })
     }
 
     override fun onDestroy() {

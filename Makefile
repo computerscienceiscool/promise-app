@@ -11,7 +11,7 @@ PEER_DIR ?= .local/promise-peer
 GOCACHE ?= $(CURDIR)/.local/go-build-cache
 export GOCACHE
 
-.PHONY: help test host-build apk install launch logcat diagnose-phone pull-screenshot usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open demo-usb-setup demo-usb-verify duplicate-local require-admin-token peer-id peer-inbox-local peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence evidence-local clean-apk
+.PHONY: help test host-build apk install launch logcat diagnose-phone phone-smoke pull-screenshot usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open demo-usb-setup demo-usb-verify duplicate-local require-admin-token peer-id peer-inbox-local recipient-verify peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence evidence-local clean-apk
 
 help:
 	@printf '%s\n' \
@@ -23,6 +23,7 @@ help:
 	  '  make launch                       Start Promise App on the connected phone' \
 	  '  make logcat                       Show Promise App crash/error logs' \
 	  '  make diagnose-phone               Clear logs, launch app, then show crash/errors' \
+	  '  make phone-smoke RELAY=URL        Verify phone reaches relay over Wi-Fi; add USB=1 to test USB' \
 	  '  make pull-screenshot              Pull the newest saved phone screenshot to .local/phone-screenshots/' \
 	  '  make usb-relay                    Route phone localhost:8080 to this computer over USB' \
 	  '  make usb-relay-status             Check the USB route and local relay health' \
@@ -33,6 +34,7 @@ help:
 	  '  make usb-relay-clear              Remove the USB relay route' \
 	  '  make peer-id                      Print the persistent computer recipient CID' \
 	  '  make peer-inbox-local             Fetch and verify the computer peer inbox from this relay' \
+	  '  make recipient-verify RELAY=URL   Show RECIPIENT VERIFIED for each verified message' \
 	  '  make peer-qr                      Create a scannable PNG for the recipient CID' \
 	  '  make peer-qr-open                 Create and show the recipient QR image' \
 	  '  make relay-qr-open RELAY=URL       Create and show a phone relay-health QR image' \
@@ -66,6 +68,10 @@ diagnose-phone:
 	adb shell am start -n org.promisegrid.promiseapp/.MainActivity
 	sleep 2
 	$(MAKE) logcat
+
+phone-smoke:
+	@test -n "$(RELAY)" || (echo 'Set RELAY=http://LAN-IP:8080' >&2; exit 2)
+	@if test "$(USB)" = 1; then ./scripts/smoke-connected-phone.sh -relay "$(RELAY)" --usb; else ./scripts/smoke-connected-phone.sh -relay "$(RELAY)"; fi
 
 # Copies the most recent screenshot saved by Android. The destination is local
 # demo material and remains ignored with the rest of .local/.
@@ -118,6 +124,12 @@ peer-id:
 
 peer-inbox-local:
 	cd $(BACKEND_DIR) && go run ./cmd/promise-peer inbox -relay http://127.0.0.1:8080 -identity-file ../$(PEER_DIR)/identity.ed25519 -inbox-dir ../$(PEER_DIR)/inbox
+
+# The recipient independently verifies exact retrieved bytes: this is stronger
+# than the phone's relay-upload acknowledgement and requires no admin token.
+recipient-verify:
+	@test -n "$(RELAY)" || (echo 'Set RELAY=http://LAN-IP:PORT' >&2; exit 2)
+	cd $(BACKEND_DIR) && go run ./cmd/promise-peer inbox -relay "$(RELAY)" -identity-file ../$(PEER_DIR)/identity.ed25519 -inbox-dir ../$(PEER_DIR)/inbox
 
 peer-qr:
 	cd $(BACKEND_DIR) && go run ./cmd/promise-peer qr -identity-file ../$(PEER_DIR)/identity.ed25519 -out ../$(PEER_DIR)/recipient-qr.png

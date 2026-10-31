@@ -119,11 +119,15 @@ CID. It is a local demo transport, not a protocol requirement.
 ### Phone actions
 
 1. Open **Promise App**.
-2. Tap **Use USB relay** and confirm `Active relay: http://127.0.0.1:8080`.
-3. Scan/copy the recipient QR, then tap **Paste recipient identity**.
-4. Enter `test` and tap **Sign, queue, and upload**.
-5. Confirm `UPLOADED`. Use **Retry pending uploads** after a transport error;
-   it reuses the durable original bytes.
+2. Tap **Use USB relay**, then **Check relay**. Confirm `Relay check: ready`.
+3. Tap **Scan recipient QR** and scan the computer recipient QR. Confirm that
+   the recipient field is filled with its CID.
+4. Enter `test` and tap **Sign, queue, and upload**. The app shows the exact
+   **Message CID**; use **Copy message CID** if it is needed at the terminal.
+5. Confirm `Relay accepted <CID>`. This proves only that the relay accepted
+   the phone's durable exact bytes, not that a recipient accepted or verified
+   the promise. Use **Retry pending uploads** after a transport error; it
+   reuses the durable original bytes.
 
 ### Verify and capture audit proof
 
@@ -133,6 +137,9 @@ make demo-usb-verify PROMISE_ADMIN_TOKEN='the-same-relay-token'
 
 The command verifies the computer inbox, captures proof-check output, and saves
 authenticated relay audit JSON. It refuses ambiguous inbox contents.
+Its `RECIPIENT VERIFIED cid=<CID>` result proves that the computer recipient
+fetched that CID and independently checked its bytes, frozen pCID, signature,
+and recipient binding. It still does not represent recipient acceptance.
 
 ## Make commands
 
@@ -143,6 +150,7 @@ Run `make help`. The primary commands are:
 | Test backend/protocol/peer | `make test` |
 | Build/install app | `make install` |
 | Diagnose phone startup | `make diagnose-phone` |
+| Smoke-test attached phone relay access | `make phone-smoke RELAY=http://LAN-IP:8080 USB=1` |
 | Check USB bridge and relay | `make usb-relay-status` |
 | Full USB setup | `make demo-usb-setup` |
 | Verify inbox | `make peer-inbox-local` |
@@ -159,6 +167,7 @@ Run `make help`. The primary commands are:
 Do not commit private keys, relay tokens, or local evidence.
 
 - [Phone/computer demo](docs/phone-computer-demo.md)
+- [Office Wi-Fi demo blocker](docs/office-wifi-demo-blocker.md)
 - [Completed phone-to-computer POC example](docs/example-poc.md)
 - [Amazon Fire / Kindle installation](docs/kindle.md)
 - [Device relay setup](docs/device-relay-setup.md)

@@ -6,6 +6,20 @@ import java.nio.charset.StandardCharsets
 import org.json.JSONObject
 
 class RelayClient(private val relayURL: String, val deviceID: String) {
+    /** Checks that the configured relay is reachable before a message is sent. */
+    fun health(): Result<Unit> = runCatching {
+        val connection = request("/healthz", "GET")
+        try {
+            val code = connection.responseCode
+            if (code !in 200..299) {
+                val detail = connection.errorStream?.bufferedReader(StandardCharsets.UTF_8)?.use { it.readText() }.orEmpty()
+                error("Relay health check failed ($code): ${detail.take(MAX_ERROR_CHARS)}")
+            }
+        } finally {
+            connection.disconnect()
+        }
+    }
+
     fun upload(envelope: ByteArray): Result<String> = runCatching {
         require(relayURL.startsWith("http://") || relayURL.startsWith("https://")) {
             "Relay URL must start with http:// or https://"

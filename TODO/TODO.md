@@ -1,5 +1,7 @@
 # Promise App TODO
 
+- [ ] 071 - Prove phone-to-phone messaging over the Internet
+- [x] 070 - Add user-visible delivery verification
 - [x] 003 - Encode Android CIDs and signed envelopes
 - [x] 004 - Upload Android outbox envelopes
 - [x] 005 - Add Android retry and error states
@@ -28,7 +30,7 @@
 - [ ] 026 - Start the relay with persistent device-reachable storage
 - [ ] 027 - Configure both phones with the relay URL
 - [ ] 028 - Send and verify a first signed message
-- [ ] 029 - Prove duplicate delivery preserves one message CID
+- [x] 029 - Prove duplicate delivery preserves one message CID
 - [ ] 030 - Prove offline retry preserves one message CID
 - [x] 031 - Inspect relay audit evidence
 - [ ] 032 - Review evidence and mark validated TODOs done
@@ -53,7 +55,7 @@
 - [x] 051 - Send a phone promise to the computer peer
 - [x] 052 - Fetch and verify the phone promise on the computer
 - [x] 053 - Record audit evidence for the phone-computer demo
-- [ ] 054 - Validate the phone-computer host setup
+- [x] 054 - Validate the phone-computer host setup
 - [x] 055 - Add common Make commands
 - [x] 056 - Reject placeholder relay URLs
 - [x] 057 - Add phone launch and diagnostic commands

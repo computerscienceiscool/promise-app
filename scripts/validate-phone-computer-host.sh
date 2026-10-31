@@ -80,7 +80,8 @@ if [[ -n "$apk" ]]; then
   [[ -f "$apk" && -s "$apk" ]] || { printf 'APK is missing or empty: %s\n' "$apk" >&2; exit 1; }
   command -v unzip >/dev/null || { printf '%s\n' 'unzip is required to validate an APK.' >&2; exit 127; }
   unzip -tqq "$apk" >/dev/null
-  unzip -Z1 "$apk" | grep -qx 'AndroidManifest.xml' || {
+  apk_entries=$(unzip -Z1 "$apk")
+  grep -Fxq 'AndroidManifest.xml' <<<"$apk_entries" || {
     printf 'APK has no AndroidManifest.xml: %s\n' "$apk" >&2
     exit 1
   }

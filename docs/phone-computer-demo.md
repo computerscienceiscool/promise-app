@@ -52,15 +52,18 @@ persistent computer recipient CID.
 ## 3. Send from the phone
 
 1. Open **Promise App**.
-2. Select **Use USB relay**. Confirm `Active relay: http://127.0.0.1:8080`.
-3. Scan or copy the computer recipient QR, then select **Paste recipient
-   identity**.
+2. Select **Use USB relay**, then **Check relay**. Confirm `Relay check:
+   ready` as well as `Active relay: http://127.0.0.1:8080`.
+3. Select **Scan recipient QR** and scan the computer recipient QR. Confirm
+   that it fills **Recipient device identity CID**.
 4. Enter a non-sensitive test body, such as `test`.
 5. Select **Sign, queue, and upload**.
-6. Record the message CID and wait for `UPLOADED` in the phone outbox.
+6. Record the visible **Message CID** (or select **Copy message CID**) and wait
+   for `Relay accepted <CID>`.
 
-`UPLOADED` means the phone queued immutable signed bytes and the relay accepted
-them. It does not mean the computer or a person accepted the promise.
+`Relay accepted <CID>` means the phone queued immutable signed bytes and the
+relay accepted them. It does not mean the computer or a person accepted or
+verified the promise.
 
 ## 4. Verify on the computer
 
@@ -73,6 +76,9 @@ PROMISE_ADMIN_TOKEN='the-same-relay-token' make demo-usb-verify
 This command fetches the computer inbox, verifies the exact envelope bytes,
 and captures the correlated local relay audit evidence. It fails if there is
 not exactly one verified inbox message or if the evidence cannot be matched.
+Look for `RECIPIENT VERIFIED cid=<CID>` and compare it to the phone's visible
+message CID. That result proves independent recipient-side CID, Grid-CBOR,
+frozen-pCID, signature, and recipient-binding checks; it is not acceptance.
 
 For a completed example, including the phone screenshot, QR image, message
 CID, verifier output, and stated limits, see [example-poc.md](example-poc.md).

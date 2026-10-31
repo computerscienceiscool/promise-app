@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Promise App POC Demo Walkthrough</title>
+<style>
+@page { margin: 15mm; } body { color:#16202a; font:11pt/1.45 system-ui,sans-serif; max-width:190mm; margin:auto; } h1 { font-size:25pt; margin:0 0 4mm; } h2 { border-bottom:1px solid #b8c4d0; font-size:16pt; margin:9mm 0 3mm; padding-bottom:1mm; } h3 { font-size:12pt; } p,li { margin:1.5mm 0; } code { background:#edf2f6; border-radius:2px; font:9.5pt ui-monospace,monospace; padding:0 .7mm; } pre { background:#10212f; color:#f4f8fb; border-radius:4px; font:8.8pt/1.35 ui-monospace,monospace; overflow-wrap:anywhere; padding:3.5mm; white-space:pre-wrap; } .callout { background:#eef6ff; border-left:4px solid #2979c9; margin:3mm 0; padding:2mm 3mm; } .warn { background:#fff5e5; border-left-color:#c87815; } .success { background:#eaf7ef; border-left-color:#21864b; } table { border-collapse:collapse; margin:3mm 0; width:100%; } td,th { border:1px solid #b8c4d0; padding:2mm; text-align:left; vertical-align:top; } @media print { h2,h3 { break-after:avoid; } pre,table,.callout { break-inside:avoid; } }
+</style></head><body>
+<h1>Promise App POC Demo Walkthrough</h1>
+<p><strong>Purpose:</strong> show that a phone signs and durably queues exact message bytes, a relay stores and routes those bytes, and a separate computer recipient independently verifies them. This is a POC—not a claim of recipient acceptance, production security, or a universal PromiseGrid transport.</p>
+<div class="callout warn"><strong>Keep private:</strong> relay admin token, private computer identity file, and generated local evidence. Do not put them in a slide deck, QR code, chat, or repository.</div>
+
+<h2>1. What the demo proves</h2>
+<table><thead><tr><th>Visible result</th><th>What it proves</th><th>What it does not prove</th></tr></thead><tbody>
+<tr><td><code>Relay check: ready</code></td><td>The phone can reach the selected relay health endpoint.</td><td>That a message was sent or received.</td></tr>
+<tr><td>Visible message CID; phone outbox is queued</td><td>The phone durably saved exact signed bytes before upload.</td><td>That the relay or recipient has seen them.</td></tr>
+<tr><td><code>Relay accepted &lt;CID&gt;</code></td><td>The relay accepted the phone's exact bytes for that CID.</td><td>Recipient verification or human acceptance.</td></tr>
+<tr><td><code>RECIPIENT VERIFIED cid=&lt;CID&gt;</code></td><td>The computer retrieved bytes and independently checked their CID, POC protocol selector, Grid-CBOR structure, signature, and recipient binding.</td><td>Human acceptance, execution, or trust in the promise.</td></tr>
+</tbody></table>
+
+<h2>2. Before the audience arrives</h2>
+<ol><li>Connect the phone to the same private Wi-Fi as this computer. Keep a USB cable available as a fallback.</li><li>Choose an unused port, such as <code>18081</code>: <code>ss -ltnp '( sport = :18081 )'</code>.</li><li>Find the computer's private LAN address with <code>hostname -I</code>. Use an address reachable by the phone, for example <code>10.0.99.219</code>.</li><li>Build and install the current app before the demo: <code>GRADLE_USER_HOME=.local/gradle ./scripts/build-phone-computer-host.sh</code>, then <code>adb install -r android/app/build/outputs/apk/debug/app-debug.apk</code>.</li></ol>
+
+<h2>3. Start the private relay</h2>
+<p>In terminal A, substitute your private LAN address and chosen port. Leave the terminal open.</p>
+<pre>export PROMISE_ADMIN_TOKEN="$(openssl rand -hex 32)"
+export PROMISE_ADVERTISE_URL=http://10.0.99.219:18081
+export PROMISE_LISTEN_ADDR=0.0.0.0:18081
+./scripts/start-lan-relay.sh</pre>
+<p>In terminal B, verify host health:</p>
+<pre>curl --fail --silent --show-error http://127.0.0.1:18081/healthz
+# Expected: {"status":"ok"}</pre>
+<div class="callout">Before presenting the app, open <code>http://&lt;LAN-IP&gt;:&lt;PORT&gt;/healthz</code> in the phone browser. It must return <code>{"status":"ok"}</code>. If it does not, resolve Wi-Fi/client-isolation/firewall access first.</div>
+
+<h2>4. Prepare the computer recipient</h2>
+<pre>make peer-id
+make peer-qr-open</pre>
+<p>The QR contains only the computer recipient's public CID—never a private key, relay token, or message. Leave it visible on the computer screen.</p>
+
+<h2>5. Phone walkthrough</h2>
+<ol><li>Open <strong>Promise App</strong>.</li><li>Tap <strong>Scan relay URL QR</strong> and scan a QR that encodes <code>http://10.0.99.219:18081</code>. This QR configures transport; it is not a recipient.</li><li>Tap <strong>Check relay</strong> and show <code>Relay check: ready</code>.</li><li>Tap <strong>Scan recipient identity QR</strong>, scan the computer recipient QR, and show the populated recipient CID. This QR selects the recipient; it is not a relay URL.</li><li>Enter a harmless body, such as <code>POC demo test</code>.</li><li>Tap <strong>Sign, queue, and upload</strong>.</li><li>Show the visible <strong>Message CID</strong> and <code>Relay accepted &lt;CID&gt;</code>. Use <strong>Copy message CID</strong> if needed at the terminal.</li></ol>
+<div class="callout success"><strong>Presenter line:</strong> “The phone saved the signed message and the relay accepted those exact bytes. That is not yet recipient verification.”</div>
+
+<h2>6. Independent computer verification</h2>
+<p>Replace <code>&lt;CID&gt;</code> with the CID shown by the phone:</p>
+<pre>cd backend
+go run ./cmd/promise-peer inbox \
+  -relay http://10.0.99.219:18081 \
+  -identity-file ../.local/promise-peer/identity.ed25519 \
+  -inbox-dir ../.local/promise-peer/inbox \
+  -expect-cid &lt;CID&gt;</pre>
+<p>Show <code>RECIPIENT VERIFIED cid=&lt;CID&gt;</code> and compare it to the phone's visible CID.</p>
+<div class="callout success"><strong>Presenter line:</strong> “A separate recipient fetched the bytes and checked the CID, protocol profile, signature, and intended recipient. Verification is still not human acceptance.”</div>
+
+<h2>7. Repeatable checks</h2>
+<pre># Attached-phone health check over Wi-Fi; USB=1 also checks a USB reverse route.
+make phone-smoke RELAY=http://10.0.99.219:18081
+make phone-smoke RELAY=http://10.0.99.219:18081 USB=1
+
+# Validate host tools, APK, loopback health, and advertised-LAN health.
+./scripts/validate-phone-computer-host.sh \
+  -relay http://10.0.99.219:18081 \
+  -apk android/app/build/outputs/apk/debug/app-debug.apk \
+  --check-relay</pre>
+
+<h2>8. USB fallback</h2>
+<p>Use this only when the phone is connected, unlocked, authorized for USB debugging, and Wi-Fi cannot reach the host. It is a host-specific demo transport, not a protocol rule.</p>
+<pre>adb reverse tcp:18081 tcp:18081
+adb reverse --list
+adb shell 'curl --fail --silent http://127.0.0.1:18081/healthz'</pre>
+<p>Set the phone's relay URL to <code>http://127.0.0.1:18081</code>, save it, and check the relay.</p>
+
+<h2>9. Fast troubleshooting</h2>
+<table><thead><tr><th>Symptom</th><th>Check and resolution</th></tr></thead><tbody>
+<tr><td>Phone says relay failed</td><td>Open <code>http://&lt;LAN-IP&gt;:&lt;PORT&gt;/healthz</code> in the phone browser. It must return <code>{"status":"ok"}</code>. Otherwise check same Wi-Fi, client isolation, host firewall, selected port, and relay process.</td></tr>
+<tr><td>Port already in use</td><td>Run <code>ss -ltnp '( sport = :PORT )'</code>. Choose a free port and use it consistently in listener, phone URL, and verifier command.</td></tr>
+<tr><td>QR scan fails</td><td>Keep the QR visible at high brightness. The app recipient field is a fallback; never include a private key or relay token in QR content.</td></tr>
+<tr><td>Verifier cannot find the CID</td><td>Compare the phone relay URL, recipient CID, and visible Message CID. Run the verifier with that exact CID; relay status alone is not evidence of recipient verification.</td></tr>
+<tr><td>Need a clean phone</td><td>Android Settings → Apps → Promise App → Storage &amp; cache → Clear storage. This removes saved settings, outbox, and the app device identity.</td></tr>
+</tbody></table>
+
+<h2>10. Close the demo</h2>
+<ol><li>Keep the phone Message CID and computer <code>RECIPIENT VERIFIED</code> line together as evidence.</li><li>Stop the relay with <code>Ctrl-C</code> in terminal A.</li><li>Do not publish <code>.local/</code>; it contains local relay data, identities, and evidence.</li></ol>
+</body></html>

@@ -140,9 +140,16 @@ func inboxCommand(args []string) {
 		}
 	}
 	for _, item := range items {
+		// Keep the JSON record for evidence tooling, but lead with an operator
+		// result that makes clear this is an independent recipient verification.
+		fmt.Fprintln(os.Stderr, recipientVerificationResult(item.CID))
 		encoded, _ := json.Marshal(item)
 		fmt.Println(string(encoded))
 	}
+}
+
+func recipientVerificationResult(cid string) string {
+	return "RECIPIENT VERIFIED cid=" + cid
 }
 
 // resendCommand resubmits retained exact bytes to demonstrate relay

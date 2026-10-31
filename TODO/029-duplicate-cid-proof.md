@@ -2,7 +2,13 @@
 
 Repeat delivery and prove the immutable object ID does not change.
 
-Implementation is ready but has not been physically run:
+Completed 2026-10-26 using the phone's Wi-Fi-uploaded CID
+`bafkreifqo3nidty44ezg7hf6wcgoqnq2aq2gz2qz7xtubmsftdb7gsggly`:
+`promise-peer resend` returned that identical CID with `created:false` and
+`mailbox_added:false`. The subsequent proof check passed with one mailbox
+entry, two uploads, and two recipient fetches.
+
+Implementation:
 
 - `promise-peer resend` re-submits retained, verified CBOR bytes without
   re-signing or editing them, and rejects a relay response with another CID.
