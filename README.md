@@ -153,9 +153,30 @@ Run `make help`. The primary commands are:
 | Smoke-test attached phone relay access | `make phone-smoke RELAY=http://LAN-IP:8080 USB=1` |
 | Check USB bridge and relay | `make usb-relay-status` |
 | Full USB setup | `make demo-usb-setup` |
+| Prepare Phone A/Phone B QR page | `make phone-to-phone-qr-open RELAY=URL PHONE_B_CID=CID` |
 | Verify inbox | `make peer-inbox-local` |
 | Capture audit proof | `make demo-usb-verify PROMISE_ADMIN_TOKEN=...` |
 | Validate host and APK | `make validate RELAY=http://LAN-IP:8080 APK=android/app/build/outputs/apk/debug/app-debug.apk` |
+
+## Two-phone relay proof preparation
+
+For the pending two-phone Internet proof, delivery is relay-mediated:
+
+```text
+Phone A -> reachable relay -> Phone B
+```
+
+Once both the shared relay URL and Phone B's public device CID are available,
+generate the operator QR page with:
+
+```sh
+make phone-to-phone-qr-open RELAY=https://RELAY-HOST PHONE_B_CID=PHONE_B_PUBLIC_CID
+```
+
+It opens a local page with separate, explicitly labelled QR codes for Phone A's
+relay, Phone B's relay, and Phone B's recipient identity. The phones scan the
+QR codes; they do not need a direct network connection to each other. Do not
+put a relay token or a private key in the command or QR codes.
 
 ## Evidence and documentation
 

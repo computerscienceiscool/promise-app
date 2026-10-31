@@ -11,7 +11,7 @@ PEER_DIR ?= .local/promise-peer
 GOCACHE ?= $(CURDIR)/.local/go-build-cache
 export GOCACHE
 
-.PHONY: help test host-build apk install launch logcat diagnose-phone phone-smoke pull-screenshot usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open demo-usb-setup demo-usb-verify duplicate-local require-admin-token peer-id peer-inbox-local recipient-verify peer-qr peer-qr-open relay-qr-open relay-preflight relay validate evidence evidence-local clean-apk
+.PHONY: help test host-build apk install launch logcat diagnose-phone phone-smoke pull-screenshot usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open demo-usb-setup demo-usb-verify duplicate-local require-admin-token peer-id peer-inbox-local recipient-verify peer-qr peer-qr-open relay-qr-open phone-to-phone-qr-open relay-preflight relay validate evidence evidence-local clean-apk
 
 help:
 	@printf '%s\n' \
@@ -38,6 +38,7 @@ help:
 	  '  make peer-qr                      Create a scannable PNG for the recipient CID' \
 	  '  make peer-qr-open                 Create and show the recipient QR image' \
 	  '  make relay-qr-open RELAY=URL       Create and show a phone relay-health QR image' \
+	  '  make phone-to-phone-qr-open RELAY=URL PHONE_B_CID=CID  Create/show the Phone A/Phone B QR page' \
 	  '  make relay-preflight RELAY=URL    Validate a planned LAN relay URL' \
 	  '  make relay RELAY=URL               Start relay; requires PROMISE_ADMIN_TOKEN' \
 	  '  make validate RELAY=URL APK=PATH   Validate host tools, a LAN URL, and an APK' \
@@ -141,6 +142,14 @@ relay-qr-open:
 	@test -n "$(RELAY)" || (echo 'Set RELAY=http://LAN-IP:8080' >&2; exit 2)
 	cd $(BACKEND_DIR) && go run ./cmd/promise-peer qr -content "$(RELAY)/healthz" -out ../$(PEER_DIR)/relay-health-qr.png
 	xdg-open $(PEER_DIR)/relay-health-qr.png
+
+# Creates the Phone A/Phone B page with two same-relay QR codes and Phone B's
+# public identity QR. The generated page and PNGs remain local and ignored.
+phone-to-phone-qr-open:
+	@test -n "$(RELAY)" || (echo 'Set RELAY to a relay reachable by both phones' >&2; exit 2)
+	@test -n "$(PHONE_B_CID)" || (echo 'Set PHONE_B_CID to Phone B public device identity CID' >&2; exit 2)
+	RELAY="$(RELAY)" PHONE_B_CID="$(PHONE_B_CID)" ./scripts/prepare-phone-to-phone-qr-demo.sh
+	xdg-open $(PEER_DIR)/phone-to-phone-qr-cards.html
 
 relay-preflight:
 	@test -n "$(RELAY)" || (echo 'Set RELAY=http://LAN-IP:8080' >&2; exit 2)

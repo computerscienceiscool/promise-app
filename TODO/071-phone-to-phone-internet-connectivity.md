@@ -21,6 +21,9 @@ controls, not an Internet two-phone proof.
 
 ## Establish the test boundary
 
+- [x] Add the Phone A/Phone B QR-card generator. It produces two explicitly
+  labelled relay URL QRs plus Phone B's recipient-identity QR; it does not
+  include relay credentials or private keys.
 - [ ] Record the two phones, app build, relay endpoint, and network used for
   each run without recording private device data or credentials.
 - [ ] Run the same signed-message flow on a hotspot and USB first as control

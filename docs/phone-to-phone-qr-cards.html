@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Promise App: Phone A to Phone B QR Cards</title>
+<style>
+body { background:#f4f7fb; color:#13212f; font-family:system-ui,sans-serif; margin:0; padding:32px; }
+h1 { font-size:32px; margin:0 0 8px; } h2 { margin:0 0 9px; } p, li { font-size:17px; line-height:1.4; }
+.warning { color:#8d2818; font-size:19px; font-weight:700; margin:0 0 24px; } .route { background:#eaf7ef; border:3px solid #22834c; border-radius:16px; font-size:24px; font-weight:700; margin:20px 0; padding:18px; text-align:center; }
+.cards { display:flex; flex-wrap:wrap; gap:28px; } .card { background:white; border:3px solid #2d6ca2; border-radius:16px; box-shadow:0 3px 12px #0002; padding:22px; text-align:center; width:340px; } .card.recipient { border-color:#22834c; }
+img { height:280px; image-rendering:auto; width:280px; } code { background:#eaf0f6; font-size:13px; overflow-wrap:anywhere; padding:3px 5px; } .steps { background:white; border-radius:16px; box-shadow:0 3px 12px #0002; margin-top:28px; padding:24px 30px; } .steps li { margin:12px 0; } .proof { color:#17673b; font-weight:700; } .limit { color:#8d2818; font-weight:700; }
+</style></head><body>
+<h1>Promise App: Phone A → Relay → Phone B</h1>
+<p class="warning">This is not a direct phone-to-phone connection. Do not scan an old QR window.</p>
+<div class="route">Phone A → reachable relay → Phone B</div>
+<p><strong>Relay configured in these QRs:</strong> <code>__RELAY_URL__</code></p>
+<p><strong>Before starting:</strong> Put Phone A and Phone B on genuinely separate networks if proving Internet delivery. Both phones must be able to reach this relay; the phones do not need to reach each other. On each phone, use <strong>Check relay</strong> and continue only after <span class="proof">Relay check: ready</span>.</p>
+<div class="cards">
+  <section class="card">
+    <h2>1. PHONE A: RELAY URL QR</h2>
+    <p>On Phone A tap <strong>Scan relay URL QR</strong>, then scan this.</p>
+    <img src="phone-a-relay-url-qr.png" alt="Phone A relay URL QR">
+    <p>This configures Phone A transport only. It is <strong>not</strong> Phone B’s identity.</p>
+  </section>
+  <section class="card">
+    <h2>2. PHONE B: RELAY URL QR</h2>
+    <p>On Phone B tap <strong>Scan relay URL QR</strong>, then scan this.</p>
+    <img src="phone-b-relay-url-qr.png" alt="Phone B relay URL QR">
+    <p>This is the same relay as Phone A. It configures Phone B transport only.</p>
+  </section>
+  <section class="card recipient">
+    <h2>3. PHONE A: PHONE B IDENTITY QR</h2>
+    <p>On Phone A tap <strong>Scan recipient identity QR</strong>, then scan this.</p>
+    <img src="phone-b-recipient-identity-qr.png" alt="Phone B recipient identity QR">
+    <p>This selects Phone B as recipient. It is <strong>not</strong> a relay URL.</p>
+  </section>
+</div>
+<section class="steps">
+  <h2>Run the proof</h2>
+  <ol>
+    <li><strong>Phone B:</strong> scan QR 2, tap <strong>Check relay</strong>, and confirm <span class="proof">Relay check: ready</span>.</li>
+    <li><strong>Phone A:</strong> scan QR 1, tap <strong>Check relay</strong>, and confirm <span class="proof">Relay check: ready</span>.</li>
+    <li><strong>Phone A:</strong> scan QR 3. Confirm the recipient field is filled, enter a harmless message, then tap <strong>Sign, queue, and upload</strong>.</li>
+    <li><strong>Phone A:</strong> record the visible <strong>Message CID</strong> and wait for <span class="proof">Relay accepted &lt;CID&gt;</span>.</li>
+    <li><strong>Phone B:</strong> tap <strong>Refresh inbox</strong>. Pass only when it reports no failures and its Inbox lists the same CID as <span class="proof">VERIFIED</span>.</li>
+  </ol>
+  <p><strong>Meaning:</strong> <span class="proof">Relay accepted</span> proves the relay stored Phone A’s exact bytes. Phone B’s <span class="proof">VERIFIED</span> state proves independent recipient-side verification. <span class="limit">Neither means human acceptance of a promise.</span></p>
+  <p><strong>Interruption check:</strong> disconnect one phone from the relay network, tap <strong>Refresh inbox</strong> or retry an upload, confirm the actionable failure, reconnect, and repeat the affected action.</p>
+</section>
+</body></html>
