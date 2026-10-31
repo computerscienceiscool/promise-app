@@ -7,6 +7,11 @@
 <p><strong>Purpose:</strong> show that a phone signs and durably queues exact message bytes, a relay stores and routes those bytes, and a separate computer recipient independently verifies them. This is a POC—not a claim of recipient acceptance, production security, or a universal PromiseGrid transport.</p>
 <div class="callout warn"><strong>Keep private:</strong> relay admin token, private computer identity file, and generated local evidence. Do not put them in a slide deck, QR code, chat, or repository.</div>
 
+<h2>Delivery model</h2>
+<p>This is relay-mediated delivery, not a direct phone-to-phone network connection:</p>
+<pre>Sender phone  →  reachable relay  →  recipient phone or computer</pre>
+<p>The sender uploads signed bytes. The recipient independently fetches and verifies them later. The two devices may be on different networks and do not need to reach each other directly. Relay acceptance and recipient verification are not human acceptance of a promise.</p>
+
 <h2>1. What the demo proves</h2>
 <table><thead><tr><th>Visible result</th><th>What it proves</th><th>What it does not prove</th></tr></thead><tbody>
 <tr><td><code>Relay check: ready</code></td><td>The phone can reach the selected relay health endpoint.</td><td>That a message was sent or received.</td></tr>

@@ -5,6 +5,19 @@ one Android phone sends one signed message to a computer-owned recipient
 identity. The relay stores and routes exact bytes; it does not accept, alter,
 or execute the promise.
 
+## Delivery model and boundary
+
+Messages are relay-mediated, not peer-to-peer network connections:
+
+```text
+Sender phone -> reachable relay -> recipient phone or computer
+```
+
+The sender uploads signed bytes to the relay. A recipient independently fetches
+and verifies those bytes later. Sender and recipient do not need a direct
+network connection and may be on separate networks. Relay storage acceptance
+and recipient verification do not represent human acceptance of a promise.
+
 The preferred route is USB forwarding. It was used for the completed proof
 because it avoids Wi-Fi client-isolation problems. It is a local implementation
 choice, not a PromiseGrid transport rule.
