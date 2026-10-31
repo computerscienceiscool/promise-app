@@ -6,7 +6,7 @@ script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 project_dir=$(CDPATH= cd -- "$script_dir/.." && pwd)
 backend_dir="$project_dir/backend"
 template="$project_dir/docs/phone-to-phone-qr-cards.html"
-output_dir="$project_dir/.local/promise-peer"
+output_dir=${PROMISE_PHONE_QR_OUTPUT_DIR:-"$project_dir/.local/promise-peer"}
 output_page="$output_dir/phone-to-phone-qr-cards.html"
 
 usage() {
@@ -43,9 +43,9 @@ case "$PHONE_B_CID" in
 esac
 
 mkdir -p "$output_dir"
-(cd "$backend_dir" && go run ./cmd/promise-peer qr -content "$RELAY" -out ../.local/promise-peer/phone-a-relay-url-qr.png)
-(cd "$backend_dir" && go run ./cmd/promise-peer qr -content "$RELAY" -out ../.local/promise-peer/phone-b-relay-url-qr.png)
-(cd "$backend_dir" && go run ./cmd/promise-peer qr -content "$PHONE_B_CID" -out ../.local/promise-peer/phone-b-recipient-identity-qr.png)
+(cd "$backend_dir" && go run ./cmd/promise-peer qr -content "$RELAY" -out "$output_dir/phone-a-relay-url-qr.png")
+(cd "$backend_dir" && go run ./cmd/promise-peer qr -content "$RELAY" -out "$output_dir/phone-b-relay-url-qr.png")
+(cd "$backend_dir" && go run ./cmd/promise-peer qr -content "$PHONE_B_CID" -out "$output_dir/phone-b-recipient-identity-qr.png")
 
 sed "s|__RELAY_URL__|$RELAY|g" "$template" > "$output_page"
 

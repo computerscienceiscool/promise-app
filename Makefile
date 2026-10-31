@@ -11,12 +11,13 @@ PEER_DIR ?= .local/promise-peer
 GOCACHE ?= $(CURDIR)/.local/go-build-cache
 export GOCACHE
 
-.PHONY: help test host-build apk install launch logcat diagnose-phone phone-smoke pull-screenshot usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open demo-usb-setup demo-usb-verify duplicate-local require-admin-token peer-id peer-inbox-local recipient-verify peer-qr peer-qr-open relay-qr-open phone-to-phone-qr-open relay-preflight relay validate evidence evidence-local clean-apk
+.PHONY: help test test-phone-to-phone-qr host-build apk install launch logcat diagnose-phone phone-smoke pull-screenshot usb-relay usb-relay-status usb-relay-clear usb-relay-qr-open demo-usb-setup demo-usb-verify duplicate-local require-admin-token peer-id peer-inbox-local recipient-verify peer-qr peer-qr-open relay-qr-open phone-to-phone-qr-open relay-preflight relay validate evidence evidence-local clean-apk
 
 help:
 	@printf '%s\n' \
 	  'Promise App common commands:' \
-	  '  make test                         Run backend, protocol, and peer tests' \
+	  '  make test                         Run backend, protocol, peer, and QR-page tests' \
+	  '  make test-phone-to-phone-qr       Test the Phone A/Phone B QR-page generator' \
 	  '  make host-build                   Test host tools and build the debug APK' \
 	  '  make apk                          Build the Android debug APK' \
 	  '  make install                      Install the built APK using adb' \
@@ -47,6 +48,10 @@ help:
 
 test:
 	cd $(BACKEND_DIR) && go test ./...
+	./scripts/test-prepare-phone-to-phone-qr-demo.sh
+
+test-phone-to-phone-qr:
+	./scripts/test-prepare-phone-to-phone-qr-demo.sh
 
 host-build:
 	./scripts/build-phone-computer-host.sh --offline
